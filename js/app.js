@@ -1,9 +1,9 @@
 /**
  * App Main Controller
- * Integrated with Celestial Focus Timer, Sound Mixer, Gravity Ripples, and Postcard Snapshot Export
+ * Integrated with 10 Planet Biomes, Cosmic Features, Random World Warp, and Rich Nature Soundscapes
  */
 
-import { WeatherService, PRESET_CITIES } from './weatherService.js';
+import { WeatherService, PRESET_CITIES, GLOBAL_CITIES_POOL } from './weatherService.js';
 import { WeatherConverter } from './converter.js';
 import { AudioSynthesizer } from './audioSynthesizer.js';
 import { CanvasRenderer } from './renderer/canvasRenderer.js';
@@ -18,10 +18,9 @@ class ObservatoryApp {
     this.currentTransmuted = null;
     this.logInterval = null;
 
-    // Focus / Pomodoro Timer State
     this.timer = {
       interval: null,
-      mode: 'focus', // 'focus' (25m) or 'break' (5m)
+      mode: 'focus',
       timeLeft: 25 * 60,
       totalTime: 25 * 60,
       isRunning: false
@@ -42,6 +41,7 @@ class ObservatoryApp {
     this.setupPomodoroTimer();
     this.setupPostcardSnapshot();
     this.setupInteractiveCanvasRipples(canvas);
+    this.setupRandomWarpButton();
 
     await this.loadCityWeather(PRESET_CITIES[0]);
 
@@ -53,9 +53,6 @@ class ObservatoryApp {
     }, 3 * 60 * 1000);
   }
 
-  /**
-   * Interactive Gravity Ripple on Canvas Click
-   */
   setupInteractiveCanvasRipples(canvas) {
     canvas.addEventListener('pointerdown', (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -66,13 +63,34 @@ class ObservatoryApp {
     });
   }
 
+  /**
+   * Random Planet Warp Button (W key / Header Button)
+   */
+  setupRandomWarpButton() {
+    const warpBtn = document.getElementById('random-warp-btn');
+    if (warpBtn) {
+      warpBtn.addEventListener('click', async () => {
+        warpBtn.classList.add('active');
+        const randomCity = this.weatherService.getRandomWorldCity();
+        await this.loadCityWeather(randomCity);
+        setTimeout(() => warpBtn.classList.remove('active'), 500);
+
+        const log = {
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          text: `[次元跳躍] ${randomCity.name} (${this.currentTelemetry.parallelCity}) へワープ完了。`
+        };
+        this.appendLog(log);
+      });
+    }
+  }
+
   async loadCityWeather(city, isSilent = false) {
     const cityLabel = document.getElementById('current-city-label');
     const syncStatus = document.getElementById('sync-status-text');
 
     if (!isSilent) {
-      if (cityLabel) cityLabel.textContent = `${city.name.split(' ')[0]} (同期中...)`;
-      if (syncStatus) syncStatus.textContent = 'CONNECTING...';
+      if (cityLabel) cityLabel.textContent = `${city.name.split(' ')[0]} (跳躍中...)`;
+      if (syncStatus) syncStatus.textContent = 'WARPING...';
     }
 
     try {
@@ -96,7 +114,8 @@ class ObservatoryApp {
       transmuted.renderParams, 
       transmuted.phenomenonType, 
       telemetry.biome, 
-      telemetry.seed
+      telemetry.seed,
+      telemetry.skyFeature
     );
 
     this.audioSynth.updateEnvironment({
@@ -110,7 +129,7 @@ class ObservatoryApp {
 
   updateHUD(telemetry, transmuted) {
     document.getElementById('current-city-label').textContent = telemetry.city;
-    document.getElementById('parallel-dimension-title').textContent = `${transmuted.dualTelemetry.dimensionalZone} // ${telemetry.biomeLabel}`;
+    document.getElementById('parallel-dimension-title').textContent = `${transmuted.dualTelemetry.dimensionalZone} // ${telemetry.planetDesignation}`;
     document.getElementById('phenomenon-name').textContent = transmuted.phenomenonName;
     document.getElementById('phenomenon-sub').textContent = transmuted.phenomenonSub;
     document.getElementById('weather-badge').textContent = transmuted.weatherBadge;
@@ -131,16 +150,20 @@ class ObservatoryApp {
     document.getElementById('metric-wind').textContent = `${telemetry.windSpeed.toFixed(1)}`;
     document.getElementById('metric-wind-dual').textContent = transmuted.dualTelemetry.vectorDrift;
 
+    // Planetary Specs in Right Panel
     const liveTimeEl = document.getElementById('telemetry-live-time');
     if (liveTimeEl) liveTimeEl.textContent = telemetry.time;
 
-    const windDirEl = document.getElementById('telemetry-wind-dir');
-    if (windDirEl) windDirEl.textContent = `${telemetry.windDirection}°`;
+    const gravityEl = document.getElementById('telemetry-gravity');
+    if (gravityEl) gravityEl.textContent = telemetry.gravity;
+
+    const atmoEl = document.getElementById('telemetry-atmo');
+    if (atmoEl) atmoEl.textContent = telemetry.atmosphere;
+
+    const skyFeatureEl = document.getElementById('telemetry-sky-feature');
+    if (skyFeatureEl) skyFeatureEl.textContent = telemetry.skyFeature;
   }
 
-  // =========================================================================
-  // CELESTIAL POMODORO FOCUS TIMER (25m / 5m)
-  // =========================================================================
   setupPomodoroTimer() {
     const timerBtn = document.getElementById('timer-toggle-play-btn');
     const timerResetBtn = document.getElementById('timer-reset-btn');
@@ -170,10 +193,8 @@ class ObservatoryApp {
             this.timer.isRunning = false;
             timerBtn.textContent = 'START';
 
-            // Play Solfeggio Focus Harmony Bell
             this.audioSynth.triggerFocusBell();
 
-            // Switch mode
             if (this.timer.mode === 'focus') {
               this.timer.mode = 'break';
               this.timer.totalTime = 5 * 60;
@@ -222,9 +243,6 @@ class ObservatoryApp {
     });
   }
 
-  // =========================================================================
-  // OBSERVATION POSTCARD SNAPSHOT (PNG Export)
-  // =========================================================================
   setupPostcardSnapshot() {
     const postcardBtn = document.getElementById('postcard-btn');
     postcardBtn.addEventListener('click', () => {
@@ -234,51 +252,43 @@ class ObservatoryApp {
       offCanvas.height = canvas.height;
       const ctx = offCanvas.getContext('2d');
 
-      // Draw Main Canvas
       ctx.drawImage(canvas, 0, 0);
 
-      // Add Aesthetic Celestial Postcard Stamp Overlay
       const dpr = window.devicePixelRatio || 1;
       const w = offCanvas.width / dpr;
       const h = offCanvas.height / dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Outer glowing frame
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
       ctx.lineWidth = 4;
       ctx.strokeRect(20, 20, w - 40, h - 40);
 
-      // Card Stamp Bottom Right
-      ctx.fillStyle = 'rgba(4, 9, 20, 0.75)';
-      ctx.fillRect(w - 320, h - 100, 290, 70);
-      ctx.strokeStyle = 'rgba(140, 185, 255, 0.3)';
+      ctx.fillStyle = 'rgba(4, 9, 20, 0.8)';
+      ctx.fillRect(w - 330, h - 105, 300, 75);
+      ctx.strokeStyle = 'rgba(140, 185, 255, 0.35)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(w - 320, h - 100, 290, 70);
+      ctx.strokeRect(w - 330, h - 105, 300, 75);
 
       ctx.fillStyle = '#fff';
       ctx.font = '600 13px "Cinzel", serif';
-      ctx.fillText('AETHERIA OBSERVATORY // POSTCARD', w - 305, h - 75);
+      ctx.fillText('AETHERIA OBSERVATORY // PLANET SNAPSHOT', w - 315, h - 80);
 
       ctx.fillStyle = '#00f0ff';
       ctx.font = '11px "JetBrains Mono", monospace';
-      const cityText = this.currentTelemetry ? `${this.currentTelemetry.city} [${this.currentTransmuted.phenomenonName}]` : 'ASTRAL STATION';
-      ctx.fillText(cityText, w - 305, h - 55);
+      const planetTitle = this.currentTelemetry ? `${this.currentTelemetry.parallelCity} (${this.currentTelemetry.city})` : 'EXOPLANET';
+      ctx.fillText(planetTitle, w - 315, h - 60);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
       ctx.font = '10px "JetBrains Mono", monospace';
-      ctx.fillText(`REC: ${new Date().toLocaleString()}`, w - 305, h - 40);
+      ctx.fillText(`BIOME: ${this.currentTelemetry ? this.currentTelemetry.biomeLabel : ''} // ${new Date().toLocaleDateString()}`, w - 315, h - 42);
 
-      // Download
       const link = document.createElement('a');
-      link.download = `Aetheria_Observatory_${Date.now()}.png`;
+      link.download = `Aetheria_Planet_${Date.now()}.png`;
       link.href = offCanvas.toDataURL('image/png');
       link.click();
     });
   }
 
-  // =========================================================================
-  // SOUNDSCAPE MIXER MODAL
-  // =========================================================================
   setupMixerModal() {
     const mixerOpenBtn = document.getElementById('open-mixer-btn');
     const mixerModal = document.getElementById('mixer-modal-overlay');
@@ -296,8 +306,7 @@ class ObservatoryApp {
       if (e.target === mixerModal) mixerModal.classList.remove('open');
     });
 
-    // Wire individual sliders
-    const layers = ['rain', 'birds', 'grass', 'ocean', 'wind', 'chimes'];
+    const layers = ['rain', 'birds', 'grass', 'ocean', 'wind', 'insects', 'crystal_bells', 'desert_wind', 'water_stream', 'chimes'];
     layers.forEach(l => {
       const slider = document.getElementById(`mix-${l}-slider`);
       if (slider) {
@@ -357,6 +366,9 @@ class ObservatoryApp {
         toggleAmbient();
       } else if (e.key === 'm' || e.key === 'M') {
         audioBtn.click();
+      } else if (e.key === 'w' || e.key === 'W') {
+        const warpBtn = document.getElementById('random-warp-btn');
+        if (warpBtn) warpBtn.click();
       } else if (e.key === 'p' || e.key === 'P') {
         document.getElementById('postcard-btn').click();
       }
@@ -378,19 +390,19 @@ class ObservatoryApp {
     const searchResults = document.getElementById('search-results');
     const presetContainer = document.getElementById('preset-cities');
 
-    presetContainer.innerHTML = PRESET_CITIES.map((c, i) => {
-      const sessionInfo = this.weatherService.getCitySessionInfo(c.lat, c.lon);
+    presetContainer.innerHTML = GLOBAL_CITIES_POOL.slice(0, 12).map((c, i) => {
+      const sessionInfo = this.weatherService.getCitySessionInfo(c.lat, c.lon, c.name);
       return `
         <div class="preset-city-item" data-index="${i}">
           <div style="font-weight: 500;">${c.name}</div>
-          <div style="font-size: 0.68rem; color: var(--accent-cyan);">${sessionInfo.biomeLabel}</div>
+          <div style="font-size: 0.68rem; color: var(--accent-cyan);">${c.basePlanet || sessionInfo.biomeLabel}</div>
         </div>
       `;
     }).join('');
 
     presetContainer.querySelectorAll('.preset-city-item').forEach(item => {
       item.addEventListener('click', () => {
-        const city = PRESET_CITIES[item.dataset.index];
+        const city = GLOBAL_CITIES_POOL[item.dataset.index];
         this.loadCityWeather(city);
         modalOverlay.classList.remove('open');
       });
@@ -415,7 +427,7 @@ class ObservatoryApp {
       }
 
       searchTimeout = setTimeout(async () => {
-        searchResults.innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-size: 0.8rem;">天球座標を索敵中...</div>';
+        searchResults.innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-size: 0.8rem;">惑星座標を索敵中...</div>';
         const results = await this.weatherService.searchCities(q);
         if (results.length === 0) {
           searchResults.innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-size: 0.8rem;">観測地点が見つかりませんでした</div>';
@@ -425,7 +437,7 @@ class ObservatoryApp {
         searchResults.innerHTML = results.map(r => `
           <div class="preset-city-item custom-search-item" style="text-align: left; margin-bottom: 6px;">
             <div style="color: #fff; font-weight: 500;">${r.name}</div>
-            <div style="font-size: 0.7rem; color: var(--accent-cyan);">${r.parallelName} [${r.biomeLabel}]</div>
+            <div style="font-size: 0.7rem; color: var(--accent-cyan);">${r.basePlanet} [${r.biomeLabel}]</div>
           </div>
         `).join('');
 

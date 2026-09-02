@@ -1,5 +1,5 @@
 /* ==========================================================================
-   『並行世界の気象台』 Design System & Stylesheet (Extended Features Suite)
+   『並行世界の気象台』 Design System & Stylesheet (Exoplanet Suite)
    Theme: Celestial Ether / Astral Glassmorphism
    ========================================================================== */
 
@@ -201,6 +201,22 @@ body.ambient-mode #ambient-restore-hint {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.warp-btn {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+  position: relative;
+  overflow: hidden;
+}
+
+.warp-btn:hover {
+  background: rgba(168, 85, 247, 0.3);
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
+  color: #fff;
+  transform: rotate(15deg) scale(1.08);
 }
 
 .city-select-wrapper {
@@ -725,14 +741,16 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .city-modal, .mixer-modal {
-  width: 460px;
+  width: 480px;
   max-width: 90vw;
+  max-height: 85vh;
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   transform: translateY(20px);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
 }
 
 .modal-overlay.open .city-modal,
@@ -757,6 +775,8 @@ body.ambient-mode #ambient-restore-hint {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .preset-city-item {

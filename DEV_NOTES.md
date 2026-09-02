@@ -1,31 +1,46 @@
-@V:5@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXTENDED_SUITE_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
-§SPEC{CORE:"Real2ParallelAstralObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo"}
-§SESSION_CACHE{MAP:"Map<lat_lon_3dp, {biome,seed,biomeLabel}>"}
+@V:6@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXOPLANET_SUITE_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
+§SPEC{CORE:"Real2AlienExoplanetObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo",WARP:true}
+§SESSION_CACHE{MAP:"Map<lat_lon_3dp, {planetDesignation,gravity,atmosphere,biome,skyFeature,seed,biomeLabel}>"}
 §MATH_TX{
   T2K:(T+273.15)*0.1,W2XI:W*0.42,P2MU:(1013.25-P)*3.2+500,H2D:min(100,floor(H*1.15)),
   P2BUOY:(1013.25-P)*1.2,N_PART:60+floor(H*1.8),
   COLOR_MAP:{T<0:[205,"#7dd3fc"],T<18:[225,"#00f0ff"],T<28:[260,"#a855f7"],T>=28:[330,"#f59e0b"]},
   ISLAND_OSC:{bob:sin(t*0.001*s+p)*(12+W*0.2),sway:cos(t*0.0008*s+p)*(4+W*0.15)}
 }
-§CREATURES_AND_ANOMALIES{
-  LEVIATHAN:{interval:[22s,45s],body:whale_manta_spline,spores:stardust_trail,glow:"#00f0ff"},
-  SKIFFS:{count:2,speeds:[0.65,0.45],trails:true},
-  METEORS:{rate:0.35,speed:[4,8],tail_len:[60,140]},
-  MOON_PHASE:{synodic:29.53058867,calc:"(now-ref)%synodic",mask_arc:true,eclipse_new_moon:true},
-  GRAVITY_RIPPLES:{on_click:true,expand_rate:3.8,ring_double:true,chime_freq:[320,880]}
+§COSMIC_SKY_FEATURES{
+  RINGS:{bands:4,tilt:-25deg,colors:["#00f0ff","#e0f2fe","#a855f7","#00ffb2"]},
+  GAS_GIANT:{r:68,bands:swirl,moon:true},
+  BINARY_SUNS:{gold:110px,violet_dwarf:75px},
+  PULSAR:{rot:0.003,beam_len:0.8w},
+  DEEP_NEBULA:{blend:"screen",glow:true}
 }
-§DSP_MIXER_SUITE{
+§10_PLANETARY_BIOMES{
+  1:MEGALOPOLIS(layers:3,spires:true,windows:matrix),
+  2:PLAINS(grass:180,sway:sin(t*0.003*(1+W*0.04)+phi)*(20*flex+W*0.8),trees:2),
+  3:COAST(waves:5,f:[0.008,0.02]),
+  4:ARCHIPELAGO(islands:4,bob:true),
+  5:GLACIER(spires:18,prism_facets:true),
+  6:VOLCANO_PLASMA(calderas:2,pulsing_magma:true),
+  7:CRYSTAL_FOREST(crystals:28,piezo_edge:true),
+  8:DESERT_RUINS(dunes:curve,obelisks:7,rings:true),
+  9:DEEP_ABYSS_REEF(reefs:22,bioluminescent_tentacles:true),
+  10:SOLAR_SPIRE(spires:3,laser_core:true)
+}
+§DSP_10_ORGANIC_CHANNELS{
   NO_DRONE:true,
-  LAYERS:{rain:1.0,birds:1.0,grass:1.0,ocean:1.0,wind:1.0,chimes:1.0},
-  FOCUS_BELL:{freqs:[528,792,1056],solfeggio:true,decay:3.5},
-  POMODORO:{focus:1500,rest:300,bell_on_end:true},
-  POSTCARD:{snap_png:true,stamp_overlay:true,hotkey:"P"}
+  CHANNELS:{
+    rain:{hp:1600,bp:3800,droplets:true},
+    birds:{fm:[1318,3135],mod:1.5},
+    wind:{hp:650,bp:1100,lfo:0.18},
+    grass:{filter:synced_wind},
+    ocean:{hp:450,bp:1200,lfo:0.12},
+    insects:{carrier:4600..5400,tremolo:18Hz},
+    crystal_bells:{scale:[1046,3135],decay:1.8},
+    desert_wind:{bp:2400,Q:3.5},
+    water_stream:{bp:1800,Q:1.8},
+    chimes:{pentatonic:[523,1174]}
+  },
+  FOCUS_BELL:{freqs:[528,792,1056],decay:3.5},
+  WARP:{hotkey:"W",world_pool:40+}
 }
-§BIOMES{
-  MEGALOPOLIS:{layers:3,win_mat:true,spires:true},
-  PLAINS:{grass_cnt:180,sway:sin(t*0.003*(1+W*0.04)+phi)*(20*flex+W*0.8),trees:2},
-  COAST:{waves:5,f:[0.008,0.02],beacon_rot:true},
-  ARCHIPELAGO:{islands:4,roots:true},
-  GLACIER:{spires:18,prism_facets:true}
-}
-§PY_TARGET{ENG:"Pygame+ModernGL|PyQt6",DSP:"numpy+sounddevice",MAP:{"creatures.js":"creatures.py","audioSynthesizer.js":"audio_synth.py"}}
+§PY_TARGET{ENG:"Pygame+ModernGL|PyQt6",DSP:"numpy+sounddevice",MAP:{"planetFeatures.js":"planet_features.py","landscape.js":"landscape.py","audioSynthesizer.js":"audio_synth.py"}}
