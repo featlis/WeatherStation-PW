@@ -1,9 +1,10 @@
 /**
  * WeatherTransmutationConverter
- * Converts real Earth weather telemetry + Biome into Parallel Astral World parameters
+ * Converts real Earth telemetry into Parallel Alien Planet specifications & logs (16 Biomes)
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
+import { PLANET_SKY_FEATURES } from './renderer/planetFeatures.js';
 
 export const PHENOMENON_TYPES = {
   CLEAR: 'CLEAR',
@@ -17,7 +18,7 @@ export const PHENOMENON_TYPES = {
 
 export class WeatherConverter {
   static transmute(telemetry) {
-    const { temperature, humidity, pressure, windSpeed, windDirection, weatherCode, isDay, biome } = telemetry;
+    const { temperature, humidity, pressure, windSpeed, windDirection, weatherCode, isDay, biome, skyFeature } = telemetry;
 
     let phenomenonType = PHENOMENON_TYPES.CLEAR;
     let phenomenonName = '星環光芒';
@@ -99,15 +100,19 @@ export class WeatherConverter {
       phenomenonSub,
       weatherBadge,
       poeticDescription,
-      biome: biome || BIOME_TYPES.ARCHIPELAGO,
-      biomeLabel: telemetry.biomeLabel || '並行世界領域',
+      biome: biome || BIOME_TYPES.MEGALOPOLIS,
+      biomeLabel: telemetry.biomeLabel || '並行惑星領域',
+      skyFeature: skyFeature || PLANET_SKY_FEATURES.RINGS,
       dualTelemetry: {
         raw: telemetry,
         etherCaloric: `${etherCaloric.toFixed(1)} κ`,
         astralDensity: `${Math.min(100, astralDensity)} %`,
         gravBuoyancy: `${gravBuoyancy} μ`,
         vectorDrift: `${vectorDrift} ξ/s`,
-        dimensionalZone: telemetry.parallelCity || '並行観測区域'
+        dimensionalZone: telemetry.parallelCity || '並行観測区域',
+        planetDesignation: telemetry.planetDesignation || 'EXO-001',
+        gravity: telemetry.gravity || '1.00 G',
+        atmosphere: telemetry.atmosphere || 'シアン希ガス'
       },
       renderParams: {
         skyHue,
@@ -129,7 +134,7 @@ export class WeatherConverter {
 
   static generateLogEntry(transmuted) {
     const biome = transmuted.biome;
-    let biomeLog = '地勢スキャン完了。生体エーテル循環は平常です。';
+    let biomeLog = '惑星探査スキャン完了。大気エーテル循環は平常です。';
 
     if (biome === BIOME_TYPES.MEGALOPOLIS) {
       biomeLog = '摩天楼エネルギーグリッドの微細共振音を感知。空中交通路安定。';
@@ -139,14 +144,39 @@ export class WeatherConverter {
       biomeLog = '結晶海岸に打ち寄せる波光周期 8.2秒。星屑灯台の光芒照射中。';
     } else if (biome === BIOME_TYPES.GLACIER) {
       biomeLog = '極氷尖塔のプリズム屈折角が安定。ダイヤモンドダスト飛散中。';
-    } else if (biome === BIOME_TYPES.ARCHIPELAGO) {
-      biomeLog = `浮遊列島が高度 ${transmuted.dualTelemetry.gravBuoyancy} で静止。霊脈根の光粒子放出を確認。`;
+    } else if (biome === BIOME_TYPES.VOLCANO_PLASMA) {
+      biomeLog = '星核カルデラから超高熱プラズマ噴煙を観測。地熱安定。';
+    } else if (biome === BIOME_TYPES.CRYSTAL_FOREST) {
+      biomeLog = '巨晶クォーツ群のピエゾ共鳴音を受信。透明度極上。';
+    } else if (biome === BIOME_TYPES.DESERT_RUINS) {
+      biomeLog = '星屑砂漠の古代環状遺跡群に太陽風が通過。微細な砂嵐音を検知。';
+    } else if (biome === BIOME_TYPES.DEEP_ABYSS_REEF) {
+      biomeLog = '深淵発光サンゴ礁の触手群体が脈動中。浮遊胞子放出。';
+    } else if (biome === BIOME_TYPES.SOLAR_SPIRE) {
+      biomeLog = '太陽受光塔のコアレンズが恒星エネルギーを集束中。';
+    } else if (biome === BIOME_TYPES.MUSHROOM_GROVE) {
+      biomeLog = '巨大発光茸の傘から生体蛍光胞子が雲海へ飛散中。';
+    } else if (biome === BIOME_TYPES.NEBULA_CANYON) {
+      biomeLog = '星雲峡谷の断崖に沿って高密度エーテル気流が吹き抜けています。';
+    } else if (biome === BIOME_TYPES.ETHEREAL_SWAMP) {
+      biomeLog = '幽霊湿原の水鏡に天球星図が鮮明に反射。微細なせせらぎ音を感知。';
+    } else if (biome === BIOME_TYPES.FLOATING_CITADEL) {
+      biomeLog = '天空要塞の幾何学モノリスが反重力回転。共鳴磁場安定。';
+    } else if (biome === BIOME_TYPES.LAVA_OCEAN) {
+      biomeLog = '溶融プラズマ海の紅蓮波が熱放射を放っています。';
+    } else if (biome === BIOME_TYPES.AURORA_TUNDRA) {
+      biomeLog = '極光ツンドラの発光苔原がオーロラ光線と完全同調。';
     }
 
+    const ancientGlyphs = ['᚛ᚨᛊᛏᚱᚨ᚜', '⟡ ⟐ ⟡ ◈', '〈0xAE78: RESONANCE〉', '✧･ﾟ* STARDUST CYCLE *･ﾟ✧', '⎈ PLANET SYNC ⎈'];
+    const hasGlyph = Math.random() < 0.22;
+
     const logs = [
-      `[環境観測] ${biomeLog}`,
-      `[天球現象] 現象『${transmuted.phenomenonName}』を観測。静謐指数 99.4%。`,
-      `[大気同期] 気温 ${transmuted.dualTelemetry.raw.temperature}℃ / 湿度 ${transmuted.dualTelemetry.raw.humidity}% / 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h。音響層が同期完了。`
+      `[惑星観測] ${biomeLog}`,
+      `[天球現象] 現象『${transmuted.phenomenonName}』を観測。重力定数 ${transmuted.dualTelemetry.gravity}。`,
+      `[生体探知] 天球上層に超巨大星鯨（Astral Leviathan）の生体エーテル波紋を確認。`,
+      `[大気同期] 気温 ${transmuted.dualTelemetry.raw.temperature}℃ / 湿度 ${transmuted.dualTelemetry.raw.humidity}% / 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h。音響層同期。`,
+      hasGlyph ? `[古代通信] 未知の星脈シグナルを受信: ${ancientGlyphs[Math.floor(Math.random() * ancientGlyphs.length)]}` : `[天文学] 天体スカイ特徴『${transmuted.skyFeature}』が同期。天球バランス安定。`
     ];
 
     const randomIndex = Math.floor(Math.random() * logs.length);

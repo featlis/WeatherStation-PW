@@ -1,11 +1,6 @@
 /**
- * AudioSynthesizer - Natural Environmental Soundscape
- * Pure nature sound generator (No intrusive low drones/hums):
- * 1. Crisp Procedural Rain & Micro-Droplets (雨粒・降雨)
- * 2. Ethereal Birds & Celestial Chirps (鳥のさえずり)
- * 3. Soft Wind & Grass Rustle (爽やかな風・草なびき)
- * 4. Gentle Ocean Wave Surf (波のさざなみ)
- * 5. Pentatonic Crystal Chimes (星屑着地音)
+ * AudioSynthesizer - Biome-Specific Organic Soundscape Synthesizer (16 Biomes)
+ * 100% Drone-Free, Clean Organic Sounds tailored to each terrain & environment
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -21,18 +16,41 @@ export class AudioSynthesizer {
     // Gain Nodes for Environmental Layers
     this.gains = {
       rain: null,
+      birds: null,
       wind: null,
       grass: null,
       ocean: null,
-      birds: null,
+      insects: null,
+      crystal_bells: null,
+      desert_wind: null,
+      water_stream: null,
       chimes: null
     };
 
+    // User-customizable layer multipliers (Mixer)
+    this.layerMix = {
+      rain: 1.0,
+      birds: 1.0,
+      wind: 1.0,
+      grass: 1.0,
+      ocean: 1.0,
+      insects: 1.0,
+      crystal_bells: 1.0,
+      desert_wind: 1.0,
+      water_stream: 1.0,
+      chimes: 1.0
+    };
+
+    this.lastEnvironmentState = null;
     this.birdTimer = null;
     this.dropletTimer = null;
+    this.insectTimer = null;
+    this.crystalBellTimer = null;
     this.lastChimeTime = 0;
-    this.chimeScale = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66]; // C5 to D6 crystal tones
-    this.birdScale = [1318.5, 1567.98, 1760.0, 2093.0, 2349.32, 2637.0, 3135.96]; // High clear avian pitches
+
+    this.chimeScale = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66];
+    this.birdScale = [1318.5, 1567.98, 1760.0, 2093.0, 2349.32, 2637.0, 3135.96];
+    this.crystalScale = [1046.5, 1318.5, 1567.98, 2093.0, 2637.0, 3135.96];
   }
 
   initContext() {
@@ -62,7 +80,11 @@ export class AudioSynthesizer {
       this.initRainLayer();
       this.initWindAndGrassLayer();
       this.initOceanLayer();
+      this.initDesertWindLayer();
+      this.initWaterStreamLayer();
       this.startBirdScheduler();
+      this.startInsectScheduler();
+      this.startCrystalBellScheduler();
       this.isPlaying = true;
     }
   }
@@ -71,6 +93,8 @@ export class AudioSynthesizer {
     if (!this.isPlaying) return;
     if (this.birdTimer) clearInterval(this.birdTimer);
     if (this.dropletTimer) clearInterval(this.dropletTimer);
+    if (this.insectTimer) clearInterval(this.insectTimer);
+    if (this.crystalBellTimer) clearInterval(this.crystalBellTimer);
     if (this.masterGain) {
       this.masterGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.2);
     }
@@ -90,8 +114,17 @@ export class AudioSynthesizer {
     }
   }
 
+  setLayerVolume(layer, val) {
+    if (this.layerMix[layer] !== undefined) {
+      this.layerMix[layer] = Math.max(0, Math.min(1.5, val));
+      if (this.lastEnvironmentState) {
+        this.updateEnvironment(this.lastEnvironmentState);
+      }
+    }
+  }
+
   // =========================================================================
-  // 1. RAIN LAYER (Crisp Air Texture & Discrete Droplets)
+  // 1. RAIN & DROPLETS
   // =========================================================================
   initRainLayer() {
     const noiseBuffer = this.createNoiseBuffer();
@@ -99,7 +132,6 @@ export class AudioSynthesizer {
     noiseSource.buffer = noiseBuffer;
     noiseSource.loop = true;
 
-    // Highpass removes all muddy low frequencies; bandpass emphasizes water sizzle
     const rainHP = this.ctx.createBiquadFilter();
     rainHP.type = 'highpass';
     rainHP.frequency.setValueAtTime(1600, this.ctx.currentTime);
@@ -114,7 +146,6 @@ export class AudioSynthesizer {
     rainBP.connect(this.gains.rain);
     noiseSource.start();
 
-    // Natural random water droplet pitter-patter
     this.dropletTimer = setInterval(() => {
       if (!this.isPlaying || this.gains.rain.gain.value < 0.02) return;
       if (Math.random() < 0.55) {
@@ -134,7 +165,7 @@ export class AudioSynthesizer {
     osc.frequency.exponentialRampToValueAtTime(dropFreq * 0.35, now + 0.03);
 
     g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(0.06, now + 0.004);
+    g.gain.linearRampToValueAtTime(0.06 * this.layerMix.rain, now + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
 
     osc.connect(g);
@@ -144,12 +175,11 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 2. BIRDSONG LAYER (FM-Synthesized Ethereal Chirps)
+  // 2. CELESTIAL BIRDSONG
   // =========================================================================
   startBirdScheduler() {
     this.birdTimer = setInterval(() => {
       if (!this.isPlaying || this.gains.birds.gain.value < 0.02) return;
-      // Natural sporadic avian warbles (every 2.5 to 5.5s)
       if (Math.random() < 0.5) {
         this.triggerBirdChirp();
       }
@@ -168,7 +198,6 @@ export class AudioSynthesizer {
 
     carrier.type = 'sine';
     carrier.frequency.setValueAtTime(baseFreq, now);
-    // Double chirp inflection
     carrier.frequency.exponentialRampToValueAtTime(baseFreq * 1.35, now + 0.06);
     carrier.frequency.exponentialRampToValueAtTime(baseFreq * 0.85, now + 0.18);
 
@@ -178,7 +207,7 @@ export class AudioSynthesizer {
     modulator.connect(carrier.frequency);
 
     chirpGain.gain.setValueAtTime(0.0001, now);
-    chirpGain.gain.linearRampToValueAtTime(0.12, now + 0.03);
+    chirpGain.gain.linearRampToValueAtTime(0.12 * this.layerMix.birds, now + 0.03);
     chirpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
 
     carrier.connect(chirpGain);
@@ -188,35 +217,80 @@ export class AudioSynthesizer {
     modulator.start(now);
     carrier.stop(now + 0.24);
     modulator.stop(now + 0.24);
-
-    // Optional second echo chirp
-    if (Math.random() < 0.4) {
-      setTimeout(() => {
-        if (this.isPlaying && this.ctx) this.triggerSingleEchoChirp(baseFreq * 1.15);
-      }, 160);
-    }
-  }
-
-  triggerSingleEchoChirp(freq) {
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, now);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.7, now + 0.12);
-
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(0.07, now + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-
-    osc.connect(g);
-    g.connect(this.gains.birds);
-    osc.start(now);
-    osc.stop(now + 0.13);
   }
 
   // =========================================================================
-  // 3. WIND & GRASS RUSTLE LAYER (High-register airy breeze)
+  // 3. ASTRAL CRICKETS / NIGHT INSECTS
+  // =========================================================================
+  startInsectScheduler() {
+    this.insectTimer = setInterval(() => {
+      if (!this.isPlaying || this.gains.insects.gain.value < 0.02) return;
+      if (Math.random() < 0.6) {
+        this.triggerInsectTrill();
+      }
+    }, 1800);
+  }
+
+  triggerInsectTrill() {
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    const f = 4600 + Math.random() * 800;
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f, now);
+
+    const tremolo = this.ctx.createOscillator();
+    const tremoloGain = this.ctx.createGain();
+    tremolo.frequency.setValueAtTime(18, now);
+    tremoloGain.gain.setValueAtTime(0.04, now);
+    tremolo.connect(g.gain);
+    tremolo.start(now);
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(0.04 * this.layerMix.insects, now + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+    osc.connect(g);
+    g.connect(this.gains.insects);
+    osc.start(now);
+    osc.stop(now + 0.36);
+    tremolo.stop(now + 0.36);
+  }
+
+  // =========================================================================
+  // 4. QUARTZ CRYSTAL BELLS
+  // =========================================================================
+  startCrystalBellScheduler() {
+    this.crystalBellTimer = setInterval(() => {
+      if (!this.isPlaying || this.gains.crystal_bells.gain.value < 0.02) return;
+      if (Math.random() < 0.45) {
+        this.triggerCrystalBellShimmer();
+      }
+    }, 3200);
+  }
+
+  triggerCrystalBellShimmer() {
+    const now = this.ctx.currentTime;
+    const f = this.crystalScale[Math.floor(Math.random() * this.crystalScale.length)];
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, now);
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(0.05 * this.layerMix.crystal_bells, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+
+    osc.connect(g);
+    g.connect(this.gains.crystal_bells);
+    osc.start(now);
+    osc.stop(now + 1.85);
+  }
+
+  // =========================================================================
+  // 5. WIND & GRASS
   // =========================================================================
   initWindAndGrassLayer() {
     const noiseBuffer = this.createNoiseBuffer();
@@ -224,7 +298,6 @@ export class AudioSynthesizer {
     windSource.buffer = noiseBuffer;
     windSource.loop = true;
 
-    // Highpass filter at 650Hz to eliminate all low rumble/boooing
     const airHP = this.ctx.createBiquadFilter();
     airHP.type = 'highpass';
     airHP.frequency.setValueAtTime(650, this.ctx.currentTime);
@@ -234,7 +307,6 @@ export class AudioSynthesizer {
     this.windFilter.frequency.setValueAtTime(1100, this.ctx.currentTime);
     this.windFilter.Q.setValueAtTime(2.0, this.ctx.currentTime);
 
-    // Airy breeze LFO
     const breezeLFO = this.ctx.createOscillator();
     const breezeGain = this.ctx.createGain();
     breezeLFO.frequency.setValueAtTime(0.18, this.ctx.currentTime);
@@ -250,7 +322,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 4. OCEAN WAVE SURF LAYER (Gentle surf spray & foam wash)
+  // 6. OCEAN SURF
   // =========================================================================
   initOceanLayer() {
     const noiseBuffer = this.createNoiseBuffer();
@@ -258,7 +330,6 @@ export class AudioSynthesizer {
     oceanSource.buffer = noiseBuffer;
     oceanSource.loop = true;
 
-    // Highpass at 450Hz to remove muddy hum, leaving foaming water waves
     const oceanHP = this.ctx.createBiquadFilter();
     oceanHP.type = 'highpass';
     oceanHP.frequency.setValueAtTime(450, this.ctx.currentTime);
@@ -268,7 +339,6 @@ export class AudioSynthesizer {
     oceanBP.frequency.setValueAtTime(1200, this.ctx.currentTime);
     oceanBP.Q.setValueAtTime(1.4, this.ctx.currentTime);
 
-    // 8-second smooth wave swell
     const swellLFO = this.ctx.createOscillator();
     const swellGain = this.ctx.createGain();
     swellLFO.type = 'sine';
@@ -284,7 +354,45 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 5. PENTATONIC CRYSTAL CHIMES (Clear sparkle)
+  // 7. DESERT SAND WIND
+  // =========================================================================
+  initDesertWindLayer() {
+    const noiseBuffer = this.createNoiseBuffer();
+    const sandSource = this.ctx.createBufferSource();
+    sandSource.buffer = noiseBuffer;
+    sandSource.loop = true;
+
+    const sandBP = this.ctx.createBiquadFilter();
+    sandBP.type = 'bandpass';
+    sandBP.frequency.setValueAtTime(2400, this.ctx.currentTime);
+    sandBP.Q.setValueAtTime(3.5, this.ctx.currentTime);
+
+    sandSource.connect(sandBP);
+    sandBP.connect(this.gains.desert_wind);
+    sandSource.start();
+  }
+
+  // =========================================================================
+  // 8. WATER STREAM
+  // =========================================================================
+  initWaterStreamLayer() {
+    const noiseBuffer = this.createNoiseBuffer();
+    const streamSource = this.ctx.createBufferSource();
+    streamSource.buffer = noiseBuffer;
+    streamSource.loop = true;
+
+    const streamBP = this.ctx.createBiquadFilter();
+    streamBP.type = 'bandpass';
+    streamBP.frequency.setValueAtTime(1800, this.ctx.currentTime);
+    streamBP.Q.setValueAtTime(1.8, this.ctx.currentTime);
+
+    streamSource.connect(streamBP);
+    streamBP.connect(this.gains.water_stream);
+    streamSource.start();
+  }
+
+  // =========================================================================
+  // 9. PENTATONIC CRYSTAL CHIMES
   // =========================================================================
   triggerCrystalChime(intensity = 0.6) {
     if (!this.isPlaying || !this.ctx) return;
@@ -301,7 +409,7 @@ export class AudioSynthesizer {
 
     const decayDuration = 1.2 + Math.random() * 0.6;
     chimeGain.gain.setValueAtTime(0.0001, now);
-    chimeGain.gain.linearRampToValueAtTime(0.09 * intensity, now + 0.015);
+    chimeGain.gain.linearRampToValueAtTime(0.09 * intensity * this.layerMix.chimes, now + 0.015);
     chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + decayDuration);
 
     osc.connect(chimeGain);
@@ -311,34 +419,104 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // DYNAMIC CROSS-FADER (Clean Weather & Biome Environment Mixer)
+  // 10. FOCUS BELL & GRAVITY WAVE
   // =========================================================================
-  updateEnvironment({ weatherType, biomeType, windSpeed = 10, temperature = 20, humidity = 50 }) {
+  triggerFocusBell() {
     if (!this.isPlaying || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const bellFreqs = [528.0, 792.0, 1056.0];
+
+    bellFreqs.forEach((f, idx) => {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+
+      const decay = 3.5 - idx * 0.6;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.15 / (idx + 1), now + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      osc.connect(g);
+      g.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + decay);
+    });
+  }
+
+  triggerGravityWaveChime() {
+    if (!this.isPlaying || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(0.08, now + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.55);
+  }
+
+  // =========================================================================
+  // DYNAMIC CROSS-FADER TAILORED TO 16 BIOMES
+  // =========================================================================
+  updateEnvironment(state) {
+    this.lastEnvironmentState = state;
+    if (!this.isPlaying || !this.ctx) return;
+    const { weatherType, biomeType, windSpeed = 10, humidity = 50 } = state;
     const t = this.ctx.currentTime;
     const ramp = 1.4;
 
     const isRaining = weatherType === PHENOMENON_TYPES.RAIN || weatherType === PHENOMENON_TYPES.THUNDER;
     const isClear = weatherType === PHENOMENON_TYPES.CLEAR || weatherType === PHENOMENON_TYPES.CLOUDS;
 
-    // 1. Rain Layer Gain (Active during precipitation)
-    this.gains.rain.gain.setTargetAtTime(isRaining ? (0.28 + (humidity / 100) * 0.15) : 0.0001, t, ramp);
+    // 1. Rain Layer
+    const rainVol = (isRaining ? (0.28 + (humidity / 100) * 0.15) : 0.0001) * this.layerMix.rain;
+    this.gains.rain.gain.setTargetAtTime(rainVol, t, ramp);
 
-    // 2. Birds Layer Gain (Active during clear/cloudy weather and nature biomes)
-    const birdActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.COAST || biomeType === BIOME_TYPES.MEGALOPOLIS);
-    this.gains.birds.gain.setTargetAtTime(birdActive ? 0.65 : 0.0001, t, ramp);
+    // 2. Birds: Active only in Plains, Archipelago, Coast during clear weather
+    const birdActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.COAST);
+    const birdVol = (birdActive ? 0.65 : 0.0001) * this.layerMix.birds;
+    this.gains.birds.gain.setTargetAtTime(birdVol, t, ramp);
 
-    // 3. Grass Rustle Gain (Active in plains)
-    const grassActive = biomeType === BIOME_TYPES.PLAINS ? (0.25 + (windSpeed / 40) * 0.25) : 0.0001;
-    this.gains.grass.gain.setTargetAtTime(grassActive, t, ramp);
+    // 3. Insects: Active in Plains, Crystal Forest, Desert Ruins, Mushroom Grove, Ethereal Swamp, Aurora Tundra
+    const insectActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.MUSHROOM_GROVE || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.AURORA_TUNDRA);
+    const insectVol = (insectActive ? 0.45 : 0.0001) * this.layerMix.insects;
+    this.gains.insects.gain.setTargetAtTime(insectVol, t, ramp);
 
-    // 4. Ocean Surf Gain (Active in coast)
-    const oceanActive = biomeType === BIOME_TYPES.COAST ? 0.45 : 0.0001;
-    this.gains.ocean.gain.setTargetAtTime(oceanActive, t, ramp);
+    // 4. Crystal Bells: Active in Glacier, Crystal Forest, Volcano Plasma, Floating Citadel, Nebula Canyon
+    const crystalActive = (biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.GLACIER || biomeType === BIOME_TYPES.VOLCANO_PLASMA || biomeType === BIOME_TYPES.FLOATING_CITADEL || biomeType === BIOME_TYPES.NEBULA_CANYON);
+    const crystalVol = (crystalActive ? 0.55 : 0.0001) * this.layerMix.crystal_bells;
+    this.gains.crystal_bells.gain.setTargetAtTime(crystalVol, t, ramp);
 
-    // 5. Gentle Breeze Wind Gain
-    const windActive = 0.08 + (windSpeed / 40) * 0.2;
-    this.gains.wind.gain.setTargetAtTime(windActive, t, ramp);
+    // 5. Desert Wind: Active in Desert Ruins, Solar Spire, Volcano Plasma
+    const desertActive = (biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.SOLAR_SPIRE || biomeType === BIOME_TYPES.VOLCANO_PLASMA);
+    const desertVol = (desertActive ? (0.2 + (windSpeed / 30) * 0.25) : 0.0001) * this.layerMix.desert_wind;
+    this.gains.desert_wind.gain.setTargetAtTime(desertVol, t, ramp);
+
+    // 6. Water Stream: Active in Archipelago, Deep Abyss Reef, Ethereal Swamp, Mushroom Grove
+    const streamActive = (biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.DEEP_ABYSS_REEF || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.MUSHROOM_GROVE);
+    const streamVol = (streamActive ? 0.35 : 0.0001) * this.layerMix.water_stream;
+    this.gains.water_stream.gain.setTargetAtTime(streamVol, t, ramp);
+
+    // 7. Grass Rustle: Active in Plains, Ethereal Swamp, Aurora Tundra
+    const grassActive = (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.AURORA_TUNDRA) ? (0.25 + (windSpeed / 40) * 0.25) : 0.0001;
+    this.gains.grass.gain.setTargetAtTime(grassActive * this.layerMix.grass, t, ramp);
+
+    // 8. Ocean Surf: Active in Coast & Lava Ocean
+    const oceanActive = (biomeType === BIOME_TYPES.COAST || biomeType === BIOME_TYPES.LAVA_OCEAN) ? 0.45 : 0.0001;
+    this.gains.ocean.gain.setTargetAtTime(oceanActive * this.layerMix.ocean, t, ramp);
+
+    // 9. Base Ambient Wind: Present in all open atmospheric landscapes
+    const windVol = (0.08 + (windSpeed / 40) * 0.2) * this.layerMix.wind;
+    this.gains.wind.gain.setTargetAtTime(windVol, t, ramp);
     if (this.windFilter) {
       this.windFilter.frequency.setTargetAtTime(800 + windSpeed * 30, t, ramp);
     }

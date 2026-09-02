@@ -1,11 +1,13 @@
 /**
  * CanvasRenderer
- * Master 60fps rendering coordinator for Parallel World Observatory
+ * Master 60fps rendering coordinator with 10 Biomes, Cosmic Planet Features, Creatures, and Gravity Ripples
  */
 
 import { SkyRenderer } from './sky.js';
 import { LandscapeRenderer, BIOME_TYPES } from './landscape.js';
 import { WeatherEffectsRenderer } from './weatherEffects.js';
+import { CreaturesAndAnomaliesRenderer } from './creatures.js';
+import { PlanetFeaturesRenderer, PLANET_SKY_FEATURES } from './planetFeatures.js';
 
 export class CanvasRenderer {
   constructor(canvasElement) {
@@ -13,8 +15,10 @@ export class CanvasRenderer {
     this.ctx = this.canvas.getContext('2d');
 
     this.skyRenderer = new SkyRenderer();
+    this.planetFeatures = new PlanetFeaturesRenderer();
     this.landscapeRenderer = new LandscapeRenderer();
     this.weatherEffects = new WeatherEffectsRenderer();
+    this.creaturesRenderer = new CreaturesAndAnomaliesRenderer();
 
     this.width = 0;
     this.height = 0;
@@ -22,7 +26,8 @@ export class CanvasRenderer {
 
     this.currentParams = null;
     this.currentPhenomenon = null;
-    this.currentBiome = BIOME_TYPES.ARCHIPELAGO;
+    this.currentBiome = BIOME_TYPES.MEGALOPOLIS;
+    this.currentSkyFeature = PLANET_SKY_FEATURES.RINGS;
 
     this.isRunning = false;
     this.startTime = performance.now();
@@ -49,14 +54,20 @@ export class CanvasRenderer {
     }
   }
 
+  triggerGravityRipple(x, y) {
+    this.creaturesRenderer.addGravityRipple(x, y);
+  }
+
   setBiome(biomeType, seed) {
     this.currentBiome = biomeType;
     this.landscapeRenderer.setBiome(biomeType, seed);
   }
 
-  updateState(renderParams, phenomenonType, biomeType, seed) {
+  updateState(renderParams, phenomenonType, biomeType, seed, skyFeature) {
     this.currentParams = renderParams;
     this.currentPhenomenon = phenomenonType;
+    this.currentSkyFeature = skyFeature || PLANET_SKY_FEATURES.RINGS;
+
     if (biomeType && (biomeType !== this.currentBiome || seed)) {
       this.currentBiome = biomeType;
       this.landscapeRenderer.setBiome(biomeType, seed || Math.random() * 10000);
@@ -96,13 +107,27 @@ export class CanvasRenderer {
   renderFrame(time) {
     this.ctx.clearRect(0, 0, this.width, this.height);
 
-    // 1. Sky & Celestial Layer
+    // 1. Base Sky Gradient & Stars
     this.skyRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 2. Multi-Biome Landscape Layer
+    // 2. Cosmic Planet Sky Features (Planetary Rings, Gas Giants, Binary Suns, Pulsars)
+    this.planetFeatures.render(
+      this.ctx, 
+      this.width, 
+      this.height, 
+      time, 
+      this.currentSkyFeature, 
+      this.currentParams.skyHue, 
+      this.currentParams.isDay
+    );
+
+    // 3. Celestial Creatures & Anomalies (Leviathans, Meteors, Skiffs)
+    this.creaturesRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
+
+    // 4. Multi-Biome Landscape Layer
     this.landscapeRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 3. Weather Phenomenon Particles
+    // 5. Weather Phenomenon Particles
     this.weatherEffects.render(this.ctx, this.width, this.height, time, this.currentParams, this.currentPhenomenon);
   }
 }
