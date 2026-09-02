@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>並行世界の気象台 (Aetheria Observatory) - 観察・静寂型気象変換ステーション</title>
-  <meta name="description" content="実在する都市の気象データを異世界の幻想的な風景（摩天楼・草原・海岸・氷河・浮遊列島）とプロシージャル・アンビエント音響にリアルタイム変換するWeb観測所。">
+  <meta name="description" content="実在する都市の気象データを異世界の幻想的な風景とプロシージャル・アンビエント音響にリアルタイム変換するWeb観測所。">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
 </head>
@@ -87,7 +87,7 @@
             <div class="weather-badge" id="weather-badge">💧</div>
           </div>
 
-          <!-- Dual Telemetry Grid (Real vs Transmuted) -->
+          <!-- Dual Telemetry Grid (Earth Live vs Astral Transmuted) -->
           <div class="telemetry-metrics-grid">
             <div class="metric-box">
               <span class="metric-label">気温 / 星素体温</span>
@@ -125,23 +125,6 @@
               <span class="metric-dual" id="metric-wind-dual">-- ξ/s</span>
             </div>
           </div>
-
-          <!-- Biome Selection & Re-roll Section -->
-          <div class="biome-selector-row">
-            <div class="biome-selector-header">
-              <span>地形バイオーム (BIOME)</span>
-              <button class="reroll-btn" id="reroll-landscape-btn" title="地形形状をランダム再生成 (Rキー)">
-                ✦ 再生成 (R)
-              </button>
-            </div>
-            <div class="biome-chips-grid">
-              <div class="biome-btn active" data-biome="MEGALOPOLIS">摩天楼</div>
-              <div class="biome-btn" data-biome="PLAINS">霊光草原</div>
-              <div class="biome-btn" data-biome="COAST">結晶海岸</div>
-              <div class="biome-btn" data-biome="ARCHIPELAGO">浮遊列島</div>
-              <div class="biome-btn" data-biome="GLACIER">極氷晶界</div>
-            </div>
-          </div>
         </div>
 
         <!-- Observatory Log Stream -->
@@ -163,7 +146,7 @@
         </div>
       </section>
 
-      <!-- Right Column: Generative Audio & Simulation Controls -->
+      <!-- Right Column: Generative Audio & Station Status -->
       <section class="hud-column">
         <!-- Audio Synthesizer Control Card -->
         <div class="glass-panel control-card interactive">
@@ -173,11 +156,11 @@
           </div>
 
           <div class="audio-controls">
-            <p style="font-size: 0.72rem; color: var(--text-muted);">
-              天候（雨・晴天の鳥・風）と地形（草なびき・波音・都市振動）にシームレス連動。
+            <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+              実在都市の気象（降雨・晴天鳥・風）および観測地点の地形（草なびき・波音・都市振動）にシームレス連動。
             </p>
 
-            <div class="slider-group">
+            <div class="slider-group" style="margin-top: 6px;">
               <div class="slider-header">
                 <span>MASTER GAIN</span>
                 <span>VOLUME</span>
@@ -187,33 +170,30 @@
           </div>
         </div>
 
-        <!-- Dimensional Simulation Card -->
-        <div class="glass-panel simulation-card interactive">
+        <!-- Observatory Station Telemetry Status -->
+        <div class="glass-panel station-status-card interactive">
           <div class="card-header">
-            <span class="card-title">現象シミュレータ (SIMULATION)</span>
-            <span class="card-tag">OVERRIDE</span>
+            <span class="card-title">観測局通信ステータス</span>
+            <span class="card-tag" id="sync-status-text" style="color: var(--accent-emerald); border-color: rgba(0, 255, 178, 0.3);">LIVE SYNC</span>
           </div>
 
-          <p style="font-size: 0.72rem; color: var(--text-muted);">
-            天候現象を手動で切り替え、視覚と環境音響のシームレスな変化を体感できます。
-          </p>
-
-          <div class="sim-presets-grid">
-            <button class="sim-preset-btn" data-preset="rain">
-              <span>💧</span> 蒼光星屑雨
-            </button>
-            <button class="sim-preset-btn" data-preset="clear">
-              <span>✨</span> 晴天・天球鳥
-            </button>
-            <button class="sim-preset-btn" data-preset="thunder">
-              <span>⚡</span> 量子共鳴放電
-            </button>
-            <button class="sim-preset-btn" data-preset="snow">
-              <span>❄️</span> 反重力結晶
-            </button>
-            <button class="sim-preset-btn" data-preset="clouds" style="grid-column: span 2;">
-              <span>☁️</span> 霊脈星雲ヴェール
-            </button>
+          <div class="status-items-list">
+            <div class="status-item-row">
+              <span class="status-item-label">地球テレメトリ同期</span>
+              <span class="status-item-val" style="color: var(--accent-emerald);">OPEN-METEO ONLINE</span>
+            </div>
+            <div class="status-item-row">
+              <span class="status-item-label">現地観測時刻</span>
+              <span class="status-item-val" id="telemetry-live-time">--:--:--</span>
+            </div>
+            <div class="status-item-row">
+              <span class="status-item-label">風向ベクトル方位</span>
+              <span class="status-item-val" id="telemetry-wind-dir">--°</span>
+            </div>
+            <div class="status-item-row">
+              <span class="status-item-label">プロシージャル更新</span>
+              <span class="status-item-val">60 FPS REALTIME</span>
+            </div>
           </div>
         </div>
       </section>
@@ -222,10 +202,10 @@
     <!-- Footer Bar -->
     <footer class="footer-bar interactive">
       <div class="ambient-tip">
-        <span class="key-badge">F</span> / <span class="key-badge">Space</span> で全画面観察 &nbsp;|&nbsp; <span class="key-badge">R</span> で地形再生成 &nbsp;|&nbsp; <span class="key-badge">M</span> 音声
+        <span class="key-badge">F</span> / <span class="key-badge">Space</span> で全画面観察 &nbsp;|&nbsp; <span class="key-badge">M</span> 音声トグル
       </div>
       <div class="ambient-tip">
-        <span>AETHERIA OBSERVATORY // MULTI-BIOME v2.0.0</span>
+        <span>AETHERIA OBSERVATORY // LIVE TELEMETRY v2.1.0</span>
       </div>
     </footer>
   </div>

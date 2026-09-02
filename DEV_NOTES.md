@@ -1,5 +1,9 @@
-@V:2@CTX:WeatherStation-PW@TGT:[WEB_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
-§SPEC{CORE:"Real2ParallelAstralObservatory",MODE:"AmbientFocus",FPS:60,SAMPLE_RATE:44100}
+@V:4@CTX:WeatherStation-PW@TGT:[WEB_CLEAN_NATURE_AUDIO,PY_WINDOWS_NATIVE_PENDING]
+§SPEC{CORE:"Real2ParallelAstralObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo(Current+Geocoding,NoKey)"}
+§SESSION_CACHE{
+  MAP:"Map<lat_lon_3dp, {biome,seed,biomeLabel}>",
+  RULE:"Deterministic/fixed per session, random distributed across biomes, persists across city switches until reload"
+}
 §MATH_TX{
   T2K:(T+273.15)*0.1,W2XI:W*0.42,P2MU:(1013.25-P)*3.2+500,H2D:min(100,floor(H*1.15)),
   P2BUOY:(1013.25-P)*1.2,N_PART:60+floor(H*1.8),
@@ -13,15 +17,13 @@
   ARCHIPELAGO:{islands:4,roots:true,monolith_rings:true},
   GLACIER:{spires:18,prism_facets:true,glint:true}
 }
-§DSP_7LAYER{
-  XFADE_TAU:1.6,
-  L1_PAD:{freq:[110.0,164.8,246.9],types:["sine","triangle","sine"],lp:420,q:3.0,lfo:0.06},
-  L2_RAIN:{hp:1200,bp:3200,q:1.2,drop_tx:{f_start:[1800,4200],decay:0.035}},
-  L3_BIRDS:{fm_c:[1318.5,1567.98,1760,2093,2349.32,2637],mod_ratio:2.0,dur:0.25},
-  L4_GRASS:{bp:550,q:2.5,lfo_f:0.12,lfo_gain:220},
-  L5_OCEAN:{pink_noise:true,lp:320,lfo_f:0.12,lfo_mod:280},
-  L6_CITY:{sine:65.4,lp:180},
-  L7_CHIME:{pentatonic:[440,523.25,587.33,659.25,783.99,880,1046.5],decay:1.8}
+§DSP_NATURE_ONLY{
+  NO_DRONE_OR_HUM:true,XFADE_TAU:1.4,
+  L1_RAIN:{hp:1600,bp:3800,q:1.0,droplet_interval:140,drop_tx:{f_start:[2200,4800],decay:0.035}},
+  L2_BIRDS:{fm_c:[1318.5,1567.98,1760,2093,2349.32,2637,3135.96],mod_ratio:1.5,interval:2400,dur:0.24,echo:true},
+  L3_GRASS:{hp:650,bp:1100,q:2.0,lfo_f:0.18,lfo_gain:350},
+  L4_OCEAN:{hp:450,bp:1200,q:1.4,lfo_f:0.12,lfo_mod:600},
+  L5_CHIME:{pentatonic:[523.25,587.33,659.25,783.99,880,1046.5,1174.66],decay:1.2}
 }
 §MODULES{
   WEB:{HTML:"index.html",CSS:"css/style.css",APP:"js/app.js",SVC:"js/weatherService.js",CVT:"js/converter.js",AUD:"js/audioSynthesizer.js",SKY:"js/renderer/sky.js",LAND:"js/renderer/landscape.js",FX:"js/renderer/weatherEffects.js",CRX:"js/renderer/canvasRenderer.js"},

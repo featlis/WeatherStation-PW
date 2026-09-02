@@ -1,13 +1,12 @@
 /**
  * App Main Controller
- * Integrates WeatherService, Converter, AudioSynthesizer (Dynamic Multi-Layer), and Multi-Biome Renderer
+ * Integrates Real-time WeatherService (Session-Fixed Biomes), Converter, Dynamic Audio, and Multi-Biome Renderer
  */
 
 import { WeatherService, PRESET_CITIES } from './weatherService.js';
 import { WeatherConverter } from './converter.js';
 import { AudioSynthesizer } from './audioSynthesizer.js';
 import { CanvasRenderer } from './renderer/canvasRenderer.js';
-import { BIOME_TYPES } from './renderer/landscape.js';
 
 class ObservatoryApp {
   constructor() {
@@ -17,9 +16,6 @@ class ObservatoryApp {
 
     this.currentTelemetry = null;
     this.currentTransmuted = null;
-    this.currentBiome = BIOME_TYPES.MEGALOPOLIS;
-    this.isSimulationMode = false;
-
     this.logInterval = null;
   }
 
@@ -27,49 +23,67 @@ class ObservatoryApp {
     const canvas = document.getElementById('world-canvas');
     this.renderer = new CanvasRenderer(canvas);
 
+    // Link rain/crystal particle splashes to procedural pentatonic chimes
     this.renderer.setSplashAudioCallback((intensity) => {
       this.audioSynth.triggerCrystalChime(intensity);
     });
 
     this.setupUIEventListeners();
     this.setupCityModal();
-    this.setupSimulationControls();
-    this.setupBiomeControls();
 
-    // Initial weather fetch for Tokyo (Megalopolis)
+    // Initial weather fetch for Tokyo (Real-time live data)
     await this.loadCityWeather(PRESET_CITIES[0]);
 
     this.renderer.start();
     this.startObservationLogger();
 
+    // Periodic real weather refresh every 3 minutes
     setInterval(() => {
-      if (!this.isSimulationMode) {
-        this.loadCityWeather(this.weatherService.currentCity, true);
-      }
-    }, 5 * 60 * 1000);
+      this.loadCityWeather(this.weatherService.currentCity, true);
+    }, 3 * 60 * 1000);
   }
 
+  /**
+   * Fetch live weather data for city
+   */
   async loadCityWeather(city, isSilent = false) {
+    const cityLabel = document.getElementById('current-city-label');
+    const syncStatus = document.getElementById('sync-status-text');
+
     if (!isSilent) {
-      document.getElementById('current-city-label').textContent = '次元同期中...';
+      if (cityLabel) cityLabel.textContent = `${city.name.split(' ')[0]} (同期中...)`;
+      if (syncStatus) syncStatus.textContent = 'CONNECTING...';
     }
 
-    const telemetry = await this.weatherService.fetchWeather(city);
-    this.currentTelemetry = telemetry;
-    this.currentBiome = telemetry.biome || BIOME_TYPES.ARCHIPELAGO;
-    this.applyTelemetry(telemetry, Math.random() * 10000);
+    try {
+      const telemetry = await this.weatherService.fetchWeather(city);
+      this.currentTelemetry = telemetry;
+      this.applyTelemetry(telemetry);
+      if (syncStatus) syncStatus.textContent = 'LIVE SYNC';
+    } catch (e) {
+      console.error('Failed to load city weather:', e);
+      if (syncStatus) syncStatus.textContent = 'OFFLINE MODE';
+    }
   }
 
-  applyTelemetry(telemetry, seed = Math.random() * 10000) {
+  /**
+   * Apply live telemetry and fixed session biome to renderer & audio
+   */
+  applyTelemetry(telemetry) {
     const transmuted = WeatherConverter.transmute(telemetry);
     this.currentTransmuted = transmuted;
 
     this.updateHUD(telemetry, transmuted);
 
-    // Update Multi-Biome Canvas Renderer
-    this.renderer.updateState(transmuted.renderParams, transmuted.phenomenonType, telemetry.biome, seed);
+    // Update Canvas Renderer with the city's fixed session biome and seed
+    this.renderer.updateState(
+      transmuted.renderParams, 
+      transmuted.phenomenonType, 
+      telemetry.biome, 
+      telemetry.seed
+    );
 
-    // Update Dynamic Ambient Audio Environment
+    // Update Dynamic Multi-Layer Ambient Audio
     this.audioSynth.updateEnvironment({
       weatherType: transmuted.phenomenonType,
       biomeType: telemetry.biome,
@@ -81,7 +95,7 @@ class ObservatoryApp {
 
   updateHUD(telemetry, transmuted) {
     document.getElementById('current-city-label').textContent = telemetry.city;
-    document.getElementById('parallel-dimension-title').textContent = `${transmuted.dualTelemetry.dimensionalZone} // ${telemetry.biomeLabel || '並行世界'}`;
+    document.getElementById('parallel-dimension-title').textContent = `${transmuted.dualTelemetry.dimensionalZone} // ${telemetry.biomeLabel}`;
     document.getElementById('phenomenon-name').textContent = transmuted.phenomenonName;
     document.getElementById('phenomenon-sub').textContent = transmuted.phenomenonSub;
     document.getElementById('weather-badge').textContent = transmuted.weatherBadge;
@@ -90,10 +104,10 @@ class ObservatoryApp {
     // Biome badge
     const biomeBadge = document.getElementById('current-biome-badge');
     if (biomeBadge) {
-      biomeBadge.textContent = telemetry.biomeLabel || telemetry.biome;
+      biomeBadge.textContent = telemetry.biomeLabel;
     }
 
-    // Dual Metrics
+    // Dual Metrics (Earth Live vs Parallel Transmuted)
     document.getElementById('metric-temp').textContent = `${telemetry.temperature.toFixed(1)}`;
     document.getElementById('metric-temp-dual').textContent = transmuted.dualTelemetry.etherCaloric;
 
@@ -106,13 +120,16 @@ class ObservatoryApp {
     document.getElementById('metric-wind').textContent = `${telemetry.windSpeed.toFixed(1)}`;
     document.getElementById('metric-wind-dual').textContent = transmuted.dualTelemetry.vectorDrift;
 
-    // Update active biome chip
-    document.querySelectorAll('.biome-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.biome === telemetry.biome);
-    });
+    // Station Telemetry Details in Right Panel
+    const liveTimeEl = document.getElementById('telemetry-live-time');
+    if (liveTimeEl) liveTimeEl.textContent = telemetry.time;
+
+    const windDirEl = document.getElementById('telemetry-wind-dir');
+    if (windDirEl) windDirEl.textContent = `${telemetry.windDirection}°`;
   }
 
   setupUIEventListeners() {
+    // 1. Audio Toggle & Volume
     const audioBtn = document.getElementById('audio-toggle-btn');
     const audioSlider = document.getElementById('audio-volume-slider');
 
@@ -129,7 +146,7 @@ class ObservatoryApp {
         </svg>
       `;
 
-      if (playing && this.currentTransmuted) {
+      if (playing && this.currentTransmuted && this.currentTelemetry) {
         this.audioSynth.updateEnvironment({
           weatherType: this.currentTransmuted.phenomenonType,
           biomeType: this.currentTelemetry.biome,
@@ -144,23 +161,7 @@ class ObservatoryApp {
       this.audioSynth.setVolume(parseFloat(e.target.value));
     });
 
-    // Re-roll landscape seed button (飽きが来ないように即座に地形を再生成)
-    const rerollBtn = document.getElementById('reroll-landscape-btn');
-    if (rerollBtn) {
-      rerollBtn.addEventListener('click', () => {
-        if (this.currentTelemetry) {
-          const newSeed = Math.random() * 99999;
-          this.renderer.setBiome(this.currentTelemetry.biome, newSeed);
-          const log = {
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            text: `[次元再構成] ${this.currentTelemetry.biomeLabel} の位相座標を再生成しました。`
-          };
-          this.appendLog(log);
-        }
-      });
-    }
-
-    // Ambient / Fullscreen Focus Mode
+    // 2. Ambient / Fullscreen Focus Mode
     const ambientBtn = document.getElementById('ambient-toggle-btn');
     const restoreHint = document.getElementById('ambient-restore-hint');
 
@@ -171,6 +172,7 @@ class ObservatoryApp {
     ambientBtn.addEventListener('click', toggleAmbient);
     restoreHint.addEventListener('click', toggleAmbient);
 
+    // Keyboard Shortcuts (F/Space: Ambient Mode, M: Mute/Unmute)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.key === 'f' || e.key === 'F' || e.key === ' ') {
@@ -178,8 +180,6 @@ class ObservatoryApp {
         toggleAmbient();
       } else if (e.key === 'm' || e.key === 'M') {
         audioBtn.click();
-      } else if (e.key === 'r' || e.key === 'R') {
-        if (rerollBtn) rerollBtn.click();
       }
     });
 
@@ -194,31 +194,6 @@ class ObservatoryApp {
     });
   }
 
-  setupBiomeControls() {
-    const biomeButtons = document.querySelectorAll('.biome-btn');
-    const biomeLabels = {
-      [BIOME_TYPES.MEGALOPOLIS]: '星間摩天楼 (Megalopolis)',
-      [BIOME_TYPES.PLAINS]: '霊光草原・巨大霊樹 (Plains)',
-      [BIOME_TYPES.COAST]: '結晶海岸・波光 (Coast)',
-      [BIOME_TYPES.ARCHIPELAGO]: '浮遊列島・神殿 (Archipelago)',
-      [BIOME_TYPES.GLACIER]: '極氷晶界・尖塔 (Glacier)'
-    };
-
-    biomeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        biomeButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const selectedBiome = btn.dataset.biome;
-        if (this.currentTelemetry) {
-          this.currentTelemetry.biome = selectedBiome;
-          this.currentTelemetry.biomeLabel = biomeLabels[selectedBiome];
-          this.applyTelemetry(this.currentTelemetry, Math.random() * 10000);
-        }
-      });
-    });
-  }
-
   setupCityModal() {
     const cityBtn = document.getElementById('city-select-btn');
     const modalOverlay = document.getElementById('city-modal-overlay');
@@ -226,17 +201,19 @@ class ObservatoryApp {
     const searchResults = document.getElementById('search-results');
     const presetContainer = document.getElementById('preset-cities');
 
-    presetContainer.innerHTML = PRESET_CITIES.map((c, i) => `
-      <div class="preset-city-item" data-index="${i}">
-        <div>${c.name}</div>
-        <div style="font-size: 0.68rem; color: var(--accent-cyan);">${c.biomeLabel}</div>
-      </div>
-    `).join('');
+    presetContainer.innerHTML = PRESET_CITIES.map((c, i) => {
+      const sessionInfo = this.weatherService.getCitySessionInfo(c.lat, c.lon);
+      return `
+        <div class="preset-city-item" data-index="${i}">
+          <div style="font-weight: 500;">${c.name}</div>
+          <div style="font-size: 0.68rem; color: var(--accent-cyan);">${sessionInfo.biomeLabel}</div>
+        </div>
+      `;
+    }).join('');
 
     presetContainer.querySelectorAll('.preset-city-item').forEach(item => {
       item.addEventListener('click', () => {
         const city = PRESET_CITIES[item.dataset.index];
-        this.isSimulationMode = false;
         this.loadCityWeather(city);
         modalOverlay.classList.remove('open');
       });
@@ -279,60 +256,11 @@ class ObservatoryApp {
 
         searchResults.querySelectorAll('.custom-search-item').forEach((item, idx) => {
           item.addEventListener('click', () => {
-            this.isSimulationMode = false;
             this.loadCityWeather(results[idx]);
             modalOverlay.classList.remove('open');
           });
         });
       }, 350);
-    });
-  }
-
-  setupSimulationControls() {
-    const presetBtns = document.querySelectorAll('.sim-preset-btn');
-    presetBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        presetBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        this.isSimulationMode = true;
-        const type = btn.dataset.preset;
-
-        let code = 0;
-        let temp = 18;
-        let wind = 10;
-        let humidity = 60;
-        let pressure = 1013;
-
-        if (type === 'rain') {
-          code = 61; temp = 14; wind = 18; humidity = 90; pressure = 1002;
-        } else if (type === 'snow') {
-          code = 71; temp = -6; wind = 8; humidity = 85; pressure = 1018;
-        } else if (type === 'thunder') {
-          code = 95; temp = 24; wind = 28; humidity = 95; pressure = 992;
-        } else if (type === 'clear') {
-          code = 0; temp = 22; wind = 6; humidity = 40; pressure = 1020;
-        } else if (type === 'clouds') {
-          code = 2; temp = 16; wind = 12; humidity = 70; pressure = 1010;
-        }
-
-        const simTelemetry = {
-          city: `[仮想観測] ${btn.textContent.trim()}`,
-          parallelCity: 'シミュレーション次元',
-          biome: this.currentTelemetry ? this.currentTelemetry.biome : BIOME_TYPES.ARCHIPELAGO,
-          biomeLabel: this.currentTelemetry ? this.currentTelemetry.biomeLabel : '浮遊列島',
-          temperature: temp,
-          humidity: humidity,
-          pressure: pressure,
-          windSpeed: wind,
-          windDirection: 90,
-          weatherCode: code,
-          isDay: true,
-          time: new Date().toLocaleTimeString()
-        };
-
-        this.applyTelemetry(simTelemetry);
-      });
     });
   }
 

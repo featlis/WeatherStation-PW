@@ -1,5 +1,5 @@
 /* ==========================================================================
-   『並行世界の気象台』 Design System & Stylesheet (Multi-Biome & Dynamic Sound)
+   『並行世界の気象台』 Design System & Stylesheet (Live Telemetry & Clean Ambient)
    Theme: Celestial Ether / Astral Glassmorphism
    ========================================================================== */
 
@@ -410,78 +410,13 @@ body.ambient-mode #ambient-restore-hint {
   opacity: 0.85;
 }
 
-/* Biome Selection Chips in Telemetry */
-.biome-selector-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.biome-selector-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.reroll-btn {
-  background: transparent;
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: 4px;
-  color: var(--accent-cyan);
-  padding: 2px 6px;
-  font-size: 0.68rem;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.reroll-btn:hover {
-  background: rgba(0, 240, 255, 0.15);
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-}
-
-.biome-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-
-.biome-btn {
-  padding: 5px 2px;
-  text-align: center;
-  font-size: 0.68rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
-}
-
-.biome-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-}
-
-.biome-btn.active {
-  background: rgba(0, 240, 255, 0.15);
-  border-color: var(--accent-cyan);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
-}
-
 /* Logs Stream */
 .logs-card {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 14px 16px;
-  min-height: 140px;
-  max-height: 240px;
+  min-height: 180px;
 }
 
 .log-stream-content {
@@ -539,7 +474,7 @@ body.ambient-mode #ambient-restore-hint {
 .audio-controls {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .slider-group {
@@ -578,44 +513,40 @@ body.ambient-mode #ambient-restore-hint {
   transition: transform 0.15s ease;
 }
 
-.simulation-card {
+/* Station Status Card */
+.station-status-card {
   flex: 1;
-  padding: 14px 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.status-items-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
 }
 
-.sim-presets-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-}
-
-.sim-preset-btn {
-  padding: 7px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary);
-  font-size: 0.72rem;
+.status-item-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  transition: var(--transition-fast);
+  font-size: 0.74rem;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.sim-preset-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--accent-cyan);
+.status-item-label {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+.status-item-val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--text-primary);
-}
-
-.sim-preset-btn.active {
-  background: rgba(0, 240, 255, 0.12);
-  border-color: var(--accent-cyan);
-  color: #fff;
 }
 
 /* Center & Footer */
