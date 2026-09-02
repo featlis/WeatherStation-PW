@@ -1,9 +1,9 @@
 /**
  * App Main Controller
- * Integrated with 10 Planet Biomes, Cosmic Features, Random World Warp, and Rich Nature Soundscapes
+ * Integrated with Unlimited Global Random Planetary Warp & Exoplanet Telemetry
  */
 
-import { WeatherService, PRESET_CITIES, GLOBAL_CITIES_POOL } from './weatherService.js';
+import { WeatherService, PRESET_CITIES } from './weatherService.js';
 import { WeatherConverter } from './converter.js';
 import { AudioSynthesizer } from './audioSynthesizer.js';
 import { CanvasRenderer } from './renderer/canvasRenderer.js';
@@ -64,20 +64,21 @@ class ObservatoryApp {
   }
 
   /**
-   * Random Planet Warp Button (W key / Header Button)
+   * Random Planet Warp Button (W key / Header Dice Button)
+   * Samples any coordinate on Earth (-80° ~ +80°, -180° ~ +180°)
    */
   setupRandomWarpButton() {
     const warpBtn = document.getElementById('random-warp-btn');
     if (warpBtn) {
       warpBtn.addEventListener('click', async () => {
         warpBtn.classList.add('active');
-        const randomCity = this.weatherService.getRandomWorldCity();
-        await this.loadCityWeather(randomCity);
+        const randomLocation = await this.weatherService.getRandomWorldLocation();
+        await this.loadCityWeather(randomLocation);
         setTimeout(() => warpBtn.classList.remove('active'), 500);
 
         const log = {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          text: `[次元跳躍] ${randomCity.name} (${this.currentTelemetry.parallelCity}) へワープ完了。`
+          text: `[次元跳躍] ${randomLocation.name} (${this.currentTelemetry.parallelCity}) へワープ完了。`
         };
         this.appendLog(log);
       });
@@ -390,7 +391,7 @@ class ObservatoryApp {
     const searchResults = document.getElementById('search-results');
     const presetContainer = document.getElementById('preset-cities');
 
-    presetContainer.innerHTML = GLOBAL_CITIES_POOL.slice(0, 12).map((c, i) => {
+    presetContainer.innerHTML = PRESET_CITIES.map((c, i) => {
       const sessionInfo = this.weatherService.getCitySessionInfo(c.lat, c.lon, c.name);
       return `
         <div class="preset-city-item" data-index="${i}">
@@ -402,7 +403,7 @@ class ObservatoryApp {
 
     presetContainer.querySelectorAll('.preset-city-item').forEach(item => {
       item.addEventListener('click', () => {
-        const city = GLOBAL_CITIES_POOL[item.dataset.index];
+        const city = PRESET_CITIES[item.dataset.index];
         this.loadCityWeather(city);
         modalOverlay.classList.remove('open');
       });

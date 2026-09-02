@@ -1,6 +1,7 @@
-@V:6@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXOPLANET_SUITE_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
-§SPEC{CORE:"Real2AlienExoplanetObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo",WARP:true}
-§SESSION_CACHE{MAP:"Map<lat_lon_3dp, {planetDesignation,gravity,atmosphere,biome,skyFeature,seed,biomeLabel}>"}
+@V:7@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[TRUE_GLOBAL_WARP_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
+§SPEC{CORE:"Real2AlienExoplanetObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo",FULL_GLOBAL_WARP:true}
+§SESSION_CACHE{MAP:"Map<lat_lon_2dp, {planetDesignation,gravity,atmosphere,biome,skyFeature,seed,biomeLabel}>"}
+§SAMPLER{LAT:[-80,80],LON:[-180,180],BIAS_LAND:0.65,REV_GEO:"BigDataCloud+GeographicMarineNamings"}
 §MATH_TX{
   T2K:(T+273.15)*0.1,W2XI:W*0.42,P2MU:(1013.25-P)*3.2+500,H2D:min(100,floor(H*1.15)),
   P2BUOY:(1013.25-P)*1.2,N_PART:60+floor(H*1.8),
@@ -15,32 +16,12 @@
   DEEP_NEBULA:{blend:"screen",glow:true}
 }
 §10_PLANETARY_BIOMES{
-  1:MEGALOPOLIS(layers:3,spires:true,windows:matrix),
-  2:PLAINS(grass:180,sway:sin(t*0.003*(1+W*0.04)+phi)*(20*flex+W*0.8),trees:2),
-  3:COAST(waves:5,f:[0.008,0.02]),
-  4:ARCHIPELAGO(islands:4,bob:true),
-  5:GLACIER(spires:18,prism_facets:true),
-  6:VOLCANO_PLASMA(calderas:2,pulsing_magma:true),
-  7:CRYSTAL_FOREST(crystals:28,piezo_edge:true),
-  8:DESERT_RUINS(dunes:curve,obelisks:7,rings:true),
-  9:DEEP_ABYSS_REEF(reefs:22,bioluminescent_tentacles:true),
-  10:SOLAR_SPIRE(spires:3,laser_core:true)
+  1:MEGALOPOLIS,2:PLAINS,3:COAST,4:ARCHIPELAGO,5:GLACIER,
+  6:VOLCANO_PLASMA,7:CRYSTAL_FOREST,8:DESERT_RUINS,9:DEEP_ABYSS_REEF,10:SOLAR_SPIRE
 }
 §DSP_10_ORGANIC_CHANNELS{
   NO_DRONE:true,
-  CHANNELS:{
-    rain:{hp:1600,bp:3800,droplets:true},
-    birds:{fm:[1318,3135],mod:1.5},
-    wind:{hp:650,bp:1100,lfo:0.18},
-    grass:{filter:synced_wind},
-    ocean:{hp:450,bp:1200,lfo:0.12},
-    insects:{carrier:4600..5400,tremolo:18Hz},
-    crystal_bells:{scale:[1046,3135],decay:1.8},
-    desert_wind:{bp:2400,Q:3.5},
-    water_stream:{bp:1800,Q:1.8},
-    chimes:{pentatonic:[523,1174]}
-  },
-  FOCUS_BELL:{freqs:[528,792,1056],decay:3.5},
-  WARP:{hotkey:"W",world_pool:40+}
+  CHANNELS:[rain,birds,wind,grass,ocean,insects,crystal_bells,desert_wind,water_stream,chimes],
+  FOCUS_BELL:528Hz,WARP:"W"
 }
 §PY_TARGET{ENG:"Pygame+ModernGL|PyQt6",DSP:"numpy+sounddevice",MAP:{"planetFeatures.js":"planet_features.py","landscape.js":"landscape.py","audioSynthesizer.js":"audio_synth.py"}}

@@ -1,6 +1,7 @@
 /**
- * WeatherService - Global Planet Observatory Database
- * 40+ World Locations + Random Planetary Warp Generator + Procedural Planet Namer
+ * WeatherService - Unlimited Global Coordinate Random Planetary Warp
+ * Queries any real coordinate on Earth (-85° to +85°, -180° to +180°) via Open-Meteo
+ * + Reverse Geo-naming for oceans, continents, and cities
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -19,7 +20,7 @@ export const BIOME_LABELS = {
   [BIOME_TYPES.SOLAR_SPIRE]: '太陽受光塔・集光アレイ (Solar Spire)'
 };
 
-export const GLOBAL_CITIES_POOL = [
+export const PRESET_CITIES = [
   { name: '東京 (Tokyo)', lat: 35.6895, lon: 139.6917, basePlanet: '惑星アストラ・ネオ' },
   { name: '京都 (Kyoto)', lat: 35.0116, lon: 135.7681, basePlanet: '霊樹星シルヴァ・エコー' },
   { name: 'ホノルル (Honolulu)', lat: 21.3069, lon: -157.8583, basePlanet: '碧海星タラサ・プライム' },
@@ -27,26 +28,8 @@ export const GLOBAL_CITIES_POOL = [
   { name: 'アタカマ砂漠 (Atacama)', lat: -23.8634, lon: -69.1328, basePlanet: '星屑砂漠星クロノス' },
   { name: 'スヴァールバル (Svalbard)', lat: 78.2232, lon: 15.6267, basePlanet: '極光星オーロラ・アーク' },
   { name: 'ガラパゴス (Galapagos)', lat: -0.9538, lon: -90.9656, basePlanet: '深淵星アビス・リーフ' },
-  { name: 'カイロ (Cairo)', lat: 30.0444, lon: 31.2357, basePlanet: '太陽神殿星ラー・ソーラー' },
-  { name: 'ロンドン (London)', lat: 51.5074, lon: -0.1278, basePlanet: '霧幻環界エーテリア' },
-  { name: 'ウシュアイア (Ushuaia)', lat: -54.8019, lon: -68.3030, basePlanet: '最果ての巨晶星アルテミス' },
-  { name: 'ニューヨーク (New York)', lat: 40.7128, lon: -74.0060, basePlanet: '星核摩天楼ハイヴ・プライム' },
-  { name: 'ラサ (Lhasa)', lat: 29.6525, lon: 91.1721, basePlanet: '天空回廊セレスティス' },
-  { name: 'トロムソ (Tromsø)', lat: 69.6492, lon: 18.9553, basePlanet: '霊光天球アーク・ヘイヴン' },
-  { name: 'キラウエア火山 (Kilauea)', lat: 19.4069, lon: -155.2833, basePlanet: '星核溶岩星パイロン' },
-  { name: 'カトマンズ (Kathmandu)', lat: 27.7172, lon: 85.3240, basePlanet: '神峰尖塔ヒマラヤ・コア' },
-  { name: 'ヌーク (Nuuk)', lat: 64.1814, lon: -51.6941, basePlanet: '純白氷晶界グラシア' },
-  { name: 'サハラオアシス (Sahara)', lat: 23.4162, lon: 25.6628, basePlanet: '流砂遺跡星オシリス' },
-  { name: '富士山頂 (Mt. Fuji)', lat: 35.3606, lon: 138.7274, basePlanet: '聖霊天球ホウライ' },
-  { name: 'ヴェネツィア (Venice)', lat: 45.4408, lon: 12.3155, basePlanet: '水鏡宮殿星アクエリア' },
-  { name: 'ナイロビ (Nairobi)', lat: -1.2921, lon: 36.8219, basePlanet: '巨獣サバンナ星ガイア' },
-  { name: 'エディンバラ (Edinburgh)', lat: 55.9533, lon: -3.1883, basePlanet: '古城星アヴァロン' },
-  { name: 'ケープタウン (Cape Town)', lat: -33.9249, lon: 18.4241, basePlanet: '双角海嶺カリプソ' },
-  { name: 'シンガポール (Singapore)', lat: 1.3521, lon: 103.8198, basePlanet: '緑光摩天楼ネオ・エデン' },
-  { name: 'マチュピチュ (Machu Picchu)', lat: -13.1631, lon: -72.5450, basePlanet: '雲上祭壇星インカ・ハイツ' }
+  { name: 'カイロ (Cairo)', lat: 30.0444, lon: 31.2357, basePlanet: '太陽神殿星ラー・ソーラー' }
 ];
-
-export const PRESET_CITIES = GLOBAL_CITIES_POOL.slice(0, 8);
 
 export class WeatherService {
   constructor() {
@@ -55,10 +38,92 @@ export class WeatherService {
   }
 
   /**
-   * Deterministically assigns unique Planetary Identity (Name, Biome, Sky Feature, Gravity, Atmo, Seed) per session
+   * Generates a completely random coordinate anywhere on Earth (-80° to +80°, -180° to +180°)
+   */
+  async getRandomWorldLocation() {
+    // Bias 60% towards land/inhabited zones, 40% towards vast oceans/poles
+    const isLandZone = Math.random() < 0.65;
+    let lat, lon;
+
+    if (isLandZone) {
+      // Sample major continental latitude & longitude bands
+      const zones = [
+        { latMin: 25, latMax: 55, lonMin: 120, lonMax: 145 }, // East Asia / Japan
+        { latMin: 35, latMax: 68, lonMin: -10, lonMax: 35 },  // Europe
+        { latMin: 25, latMax: 50, lonMin: -125, lonMax: -70 },// North America
+        { latMin: -35, latMax: 10, lonMin: -75, lonMax: -35 },// South America
+        { latMin: -35, latMax: 35, lonMin: 10, lonMax: 45 },  // Africa
+        { latMin: -40, latMax: -12, lonMin: 115, lonMax: 150 },// Oceania
+        { latMin: 50, latMax: 75, lonMin: 60, lonMax: 170 }, // Siberia / Arctic
+        { latMin: -80, latMax: -65, lonMin: -180, lonMax: 180 }// Antarctica
+      ];
+      const z = zones[Math.floor(Math.random() * zones.length)];
+      lat = +(z.latMin + Math.random() * (z.latMax - z.latMin)).toFixed(4);
+      lon = +(z.lonMin + Math.random() * (z.lonMax - z.lonMin)).toFixed(4);
+    } else {
+      // True global random coordinates (Oceans, Polar caps, Remote Islands)
+      lat = +((Math.random() * 150) - 75).toFixed(4);
+      lon = +((Math.random() * 360) - 180).toFixed(4);
+    }
+
+    // Resolve Location Name via Reverse Geocode or Oceanic Region
+    const localityName = await this.resolveCoordinateName(lat, lon);
+    const planetName = `第${Math.abs(Math.floor(lat * 7 + lon * 3)) % 89 + 10}星系『${localityName.split(' ')[0]}』`;
+
+    return {
+      name: localityName,
+      lat,
+      lon,
+      basePlanet: planetName
+    };
+  }
+
+  /**
+   * Reverse-geocodes coordinate into human/geographic region name
+   */
+  async resolveCoordinateName(lat, lon) {
+    const latStr = `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'}`;
+    const lonStr = `${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1800);
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ja`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const city = data.locality || data.city || data.principalSubdivision;
+        const country = data.countryName;
+        if (city && country) {
+          return `${city} (${country}) [${latStr}, ${lonStr}]`;
+        } else if (country) {
+          return `${country}領域 [${latStr}, ${lonStr}]`;
+        }
+      }
+    } catch (e) {
+      // Network timeout / fallback
+    }
+
+    // Fallback: Geographic Marine / Regional Namings
+    if (lat > 66.5) return `北極圏・極光界 [${latStr}, ${lonStr}]`;
+    if (lat < -60.0) return `南極氷原・最果て観測点 [${latStr}, ${lonStr}]`;
+    if (lon > 100 && lon < 180 && lat > -20 && lat < 50) return `西太平洋 観測海域 [${latStr}, ${lonStr}]`;
+    if (lon > -180 && lon < -100 && lat > -40 && lat < 40) return `東太平洋 観測宙域 [${latStr}, ${lonStr}]`;
+    if (lon > -60 && lon < 0 && lat > -40 && lat < 50) return `大西洋 観測海嶺 [${latStr}, ${lonStr}]`;
+    if (lon > 40 && lon < 100 && lat > -40 && lat < 20) return `インド洋 観測諸島 [${latStr}, ${lonStr}]`;
+    if (lat > 15 && lat < 30 && lon > -15 && lon < 40) return `サハラ砂漠 観測帯 [${latStr}, ${lonStr}]`;
+
+    return `地球観測座標 [${latStr}, ${lonStr}]`;
+  }
+
+  /**
+   * Deterministically assigns unique Planetary Identity per session
    */
   getCitySessionInfo(lat, lon, cityName = '') {
-    const key = `${Number(lat).toFixed(3)},${Number(lon).toFixed(3)}`;
+    const key = `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`;
     if (!this.sessionCityMap.has(key)) {
       const allBiomes = Object.values(BIOME_TYPES);
       const allSkyFeatures = Object.values(PLANET_SKY_FEATURES);
@@ -87,15 +152,7 @@ export class WeatherService {
   }
 
   /**
-   * Select a random planetary station from world pool
-   */
-  getRandomWorldCity() {
-    const idx = Math.floor(Math.random() * GLOBAL_CITIES_POOL.length);
-    return GLOBAL_CITIES_POOL[idx];
-  }
-
-  /**
-   * Fetch live weather data from Open-Meteo
+   * Fetch live weather data from Open-Meteo for ANY coordinate on Earth
    */
   async fetchWeather(city = this.currentCity) {
     this.currentCity = city;
