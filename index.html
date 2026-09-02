@@ -51,6 +51,13 @@
           </svg>
         </button>
 
+        <!-- Postcard Snapshot Button -->
+        <button class="action-btn" id="postcard-btn" title="観測絵葉書の保存 (Pキー)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+          </svg>
+        </button>
+
         <!-- Ambient Mode Toggle (Focus mode) -->
         <button class="action-btn" id="ambient-toggle-btn" title="HUD非表示 / 静寂観察モード (Fキー)">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -146,27 +153,42 @@
         </div>
       </section>
 
-      <!-- Right Column: Generative Audio & Station Status -->
+      <!-- Right Column: Generative Audio & Focus Pomodoro Timer -->
       <section class="hud-column">
-        <!-- Audio Synthesizer Control Card -->
+        <!-- Audio Synthesizer Control Card with Mixer Button -->
         <div class="glass-panel control-card interactive">
           <div class="card-header">
-            <span class="card-title">ダイナミック環境音響 (AUDIO)</span>
-            <span class="card-tag">SYNCHRONIZED</span>
+            <span class="card-title">自然環境音響 (AUDIO)</span>
+            <button class="mini-tool-btn" id="open-mixer-btn" title="各音響レイヤーの音量ミキサー">
+              🎛️ 音響ミキサー
+            </button>
           </div>
 
           <div class="audio-controls">
-            <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
-              実在都市の気象（降雨・晴天鳥・風）および観測地点の地形（草なびき・波音・都市振動）にシームレス連動。
-            </p>
-
-            <div class="slider-group" style="margin-top: 6px;">
+            <div class="slider-group">
               <div class="slider-header">
                 <span>MASTER GAIN</span>
                 <span>VOLUME</span>
               </div>
-              <input type="range" class="custom-range" id="audio-volume-slider" min="0" max="1" step="0.01" value="0.45">
+              <input type="range" class="custom-range" id="audio-volume-slider" min="0" max="1" step="0.01" value="0.55">
             </div>
+          </div>
+        </div>
+
+        <!-- Celestial Pomodoro Focus Timer -->
+        <div class="glass-panel timer-card interactive">
+          <div class="card-header">
+            <span class="card-title">異界の瞑想・集中タイマー</span>
+            <button class="timer-mode-chip" id="timer-mode-btn">FOCUS (25m)</button>
+          </div>
+
+          <div class="timer-display-wrap">
+            <div class="timer-clock" id="timer-time-display">25:00</div>
+          </div>
+
+          <div class="timer-controls-row">
+            <button class="timer-ctrl-btn primary" id="timer-toggle-play-btn">START</button>
+            <button class="timer-ctrl-btn" id="timer-reset-btn">RESET</button>
           </div>
         </div>
 
@@ -179,8 +201,8 @@
 
           <div class="status-items-list">
             <div class="status-item-row">
-              <span class="status-item-label">地球テレメトリ同期</span>
-              <span class="status-item-val" style="color: var(--accent-emerald);">OPEN-METEO ONLINE</span>
+              <span class="status-item-label">天体・月齢連動</span>
+              <span class="status-item-val" style="color: var(--accent-cyan);">LUNAR PHASE SYNC</span>
             </div>
             <div class="status-item-row">
               <span class="status-item-label">現地観測時刻</span>
@@ -190,10 +212,6 @@
               <span class="status-item-label">風向ベクトル方位</span>
               <span class="status-item-val" id="telemetry-wind-dir">--°</span>
             </div>
-            <div class="status-item-row">
-              <span class="status-item-label">プロシージャル更新</span>
-              <span class="status-item-val">60 FPS REALTIME</span>
-            </div>
           </div>
         </div>
       </section>
@@ -202,10 +220,10 @@
     <!-- Footer Bar -->
     <footer class="footer-bar interactive">
       <div class="ambient-tip">
-        <span class="key-badge">F</span> / <span class="key-badge">Space</span> で全画面観察 &nbsp;|&nbsp; <span class="key-badge">M</span> 音声トグル
+        <span class="key-badge">画面クリック</span> 重力波 &nbsp;|&nbsp; <span class="key-badge">F</span> 全画面観察 &nbsp;|&nbsp; <span class="key-badge">P</span> 絵葉書保存 &nbsp;|&nbsp; <span class="key-badge">M</span> 音声
       </div>
       <div class="ambient-tip">
-        <span>AETHERIA OBSERVATORY // LIVE TELEMETRY v2.1.0</span>
+        <span>AETHERIA OBSERVATORY // CELESTIAL SUITE v3.0.0</span>
       </div>
     </footer>
   </div>
@@ -233,6 +251,39 @@
         <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">主要観測所プリセット</span>
         <div class="preset-cities-grid" id="preset-cities" style="margin-top: 8px;">
           <!-- Dynamically filled -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Soundscape Mixer Modal -->
+  <div class="modal-overlay" id="mixer-modal-overlay">
+    <div class="glass-panel mixer-modal">
+      <div class="card-header">
+        <span class="card-title">環境音響レイヤーミキサー</span>
+        <button class="action-btn" id="close-mixer-btn" style="width: 28px; height: 28px;">✕</button>
+      </div>
+
+      <div class="mixer-sliders-list">
+        <div class="mixer-item">
+          <div class="mixer-label"><span>💧 雨粒・降雨音 (Rain & Droplets)</span></div>
+          <input type="range" class="custom-range" id="mix-rain-slider" min="0" max="1.5" step="0.05" value="1.0">
+        </div>
+        <div class="mixer-item">
+          <div class="mixer-label"><span>✨ 天球鳥のさえずり (Celestial Birds)</span></div>
+          <input type="range" class="custom-range" id="mix-birds-slider" min="0" max="1.5" step="0.05" value="1.0">
+        </div>
+        <div class="mixer-item">
+          <div class="mixer-label"><span>🌿 風草のそよぎ (Wind & Grass)</span></div>
+          <input type="range" class="custom-range" id="mix-grass-slider" min="0" max="1.5" step="0.05" value="1.0">
+        </div>
+        <div class="mixer-item">
+          <div class="mixer-label"><span>🌊 波のさざなみ (Ocean Surf)</span></div>
+          <input type="range" class="custom-range" id="mix-ocean-slider" min="0" max="1.5" step="0.05" value="1.0">
+        </div>
+        <div class="mixer-item">
+          <div class="mixer-label"><span>🎐 着地クリスタルチャイム (Chimes)</span></div>
+          <input type="range" class="custom-range" id="mix-chimes-slider" min="0" max="1.5" step="0.05" value="1.0">
         </div>
       </div>
     </div>

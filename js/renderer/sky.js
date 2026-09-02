@@ -1,6 +1,6 @@
 /**
  * SkyRenderer
- * Renders celestial backgrounds, starfields, nebulae, twin celestial bodies, and dynamic auroras
+ * Renders celestial backgrounds, starfields, nebulae, dynamic moon phase bodies, and auroras
  */
 
 export class SkyRenderer {
@@ -24,6 +24,18 @@ export class SkyRenderer {
     }
   }
 
+  /**
+   * Calculate exact lunar phase [0..1] (0: New Moon, 0.5: Full Moon, 1.0: New Moon)
+   */
+  getMoonPhase() {
+    const now = new Date();
+    // Known reference new moon: 2000-01-06 18:14 UTC
+    const refNewMoon = new Date('2000-01-06T18:14:00Z').getTime();
+    const synodicMonth = 29.53058867 * 86400000;
+    const diff = now.getTime() - refNewMoon;
+    return (diff % synodicMonth) / synodicMonth;
+  }
+
   render(ctx, width, height, time, params) {
     const { skyHue, skySaturation, skyLightness, isDay, windSpeed, temperature } = params;
 
@@ -41,7 +53,7 @@ export class SkyRenderer {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Stars (Active in night & twilight)
+    // 2. Stars
     const starAlphaMultiplier = isDay ? 0.35 : 0.95;
     ctx.save();
     for (const star of this.stars) {
@@ -51,7 +63,6 @@ export class SkyRenderer {
       ctx.arc(star.x * width, star.y * height, star.size, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rare bright star cross flare
       if (star.size > 1.6 && !isDay) {
         ctx.strokeStyle = `rgba(180, 230, 255, ${alpha * 0.4})`;
         ctx.lineWidth = 0.6;
@@ -65,17 +76,18 @@ export class SkyRenderer {
     }
     ctx.restore();
 
-    // 3. Celestial Bodies (Twin Moons / Solar Ring)
+    // 3. Celestial Bodies (Moon Phase & Twin Moons / Solar Ring)
     this.renderCelestialBodies(ctx, width, height, time, isDay, skyHue);
 
-    // 4. Dynamic Auroral Ribbons (Responding to wind and cold temp)
+    // 4. Dynamic Auroral Ribbons
     this.renderAuroras(ctx, width, height, time, windSpeed, temperature, skyHue);
   }
 
   renderCelestialBodies(ctx, width, height, time, isDay, skyHue) {
     ctx.save();
     const cx = width * 0.72;
-    const cy = height * 0.28;
+    const cy = height * 0.26;
+    const phase = this.getMoonPhase();
 
     if (isDay) {
       // Celestial Solar Ring / Corona
@@ -97,35 +109,49 @@ export class SkyRenderer {
       ctx.arc(cx, cy, 28, 0, Math.PI * 2);
       ctx.stroke();
     } else {
-      // Primary Astral Moon (Crescent with soft glow)
-      const moonGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, 90);
-      moonGrad.addColorStop(0, 'rgba(0, 240, 255, 0.25)');
-      moonGrad.addColorStop(0.5, 'rgba(168, 85, 247, 0.1)');
+      // Primary Astral Moon with Real-time Lunar Phase
+      const moonGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, 100);
+      moonGrad.addColorStop(0, 'rgba(0, 240, 255, 0.3)');
+      moonGrad.addColorStop(0.5, 'rgba(168, 85, 247, 0.12)');
       moonGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = moonGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 100, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crescent Moon Body
+      const moonRadius = 34;
+
+      // Full Moon Base
       ctx.fillStyle = '#f1f5f9';
       ctx.beginPath();
-      ctx.arc(cx, cy, 34, 0, Math.PI * 2);
-      ctx.fill();
-      // Mask for crescent
-      ctx.fillStyle = `hsl(${skyHue}, 60%, 5%)`;
-      ctx.beginPath();
-      ctx.arc(cx + 12, cy - 8, 30, 0, Math.PI * 2);
+      ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Secondary Smaller Distant Violet Moon
+      // Moon Phase Mask Calculation
+      // 0: New Moon (full mask), 0.25: First Quarter, 0.5: Full Moon (no mask), 0.75: Last Quarter
+      const maskOffset = (phase <= 0.5 ? (0.5 - phase) * 2 : (phase - 0.5) * 2) * (moonRadius * 1.5);
+      if (maskOffset > 2) {
+        ctx.fillStyle = `hsl(${skyHue}, 60%, 5%)`;
+        ctx.beginPath();
+        ctx.arc(cx + (phase < 0.5 ? maskOffset : -maskOffset), cy, moonRadius * 0.95, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Glowing outer rim
+      ctx.strokeStyle = 'rgba(200, 235, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Secondary Distant Violet Moon
       const m2x = width * 0.28;
       const m2y = height * 0.18;
       ctx.fillStyle = 'rgba(192, 132, 252, 0.85)';
       ctx.beginPath();
       ctx.arc(m2x, m2y, 14, 0, Math.PI * 2);
       ctx.fill();
-      // Ring around secondary moon
+
       ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();

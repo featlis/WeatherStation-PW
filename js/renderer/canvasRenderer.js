@@ -1,11 +1,12 @@
 /**
  * CanvasRenderer
- * Master 60fps rendering coordinator for Parallel World Observatory
+ * Master 60fps rendering coordinator with Creatures, Anomalies, and Interactive Gravity Ripples
  */
 
 import { SkyRenderer } from './sky.js';
 import { LandscapeRenderer, BIOME_TYPES } from './landscape.js';
 import { WeatherEffectsRenderer } from './weatherEffects.js';
+import { CreaturesAndAnomaliesRenderer } from './creatures.js';
 
 export class CanvasRenderer {
   constructor(canvasElement) {
@@ -15,6 +16,7 @@ export class CanvasRenderer {
     this.skyRenderer = new SkyRenderer();
     this.landscapeRenderer = new LandscapeRenderer();
     this.weatherEffects = new WeatherEffectsRenderer();
+    this.creaturesRenderer = new CreaturesAndAnomaliesRenderer();
 
     this.width = 0;
     this.height = 0;
@@ -47,6 +49,10 @@ export class CanvasRenderer {
     if (this.currentParams) {
       this.weatherEffects.initParticles(this.currentParams.particleCount || 100, this.width, this.height);
     }
+  }
+
+  triggerGravityRipple(x, y) {
+    this.creaturesRenderer.addGravityRipple(x, y);
   }
 
   setBiome(biomeType, seed) {
@@ -99,10 +105,13 @@ export class CanvasRenderer {
     // 1. Sky & Celestial Layer
     this.skyRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 2. Multi-Biome Landscape Layer
+    // 2. Celestial Creatures & Anomalies (Leviathans, Meteors, Skiffs)
+    this.creaturesRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
+
+    // 3. Multi-Biome Landscape Layer
     this.landscapeRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 3. Weather Phenomenon Particles
+    // 4. Weather Phenomenon Particles
     this.weatherEffects.render(this.ctx, this.width, this.height, time, this.currentParams, this.currentPhenomenon);
   }
 }

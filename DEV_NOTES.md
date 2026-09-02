@@ -1,35 +1,31 @@
-@V:4@CTX:WeatherStation-PW@TGT:[WEB_CLEAN_NATURE_AUDIO,PY_WINDOWS_NATIVE_PENDING]
-§SPEC{CORE:"Real2ParallelAstralObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo(Current+Geocoding,NoKey)"}
-§SESSION_CACHE{
-  MAP:"Map<lat_lon_3dp, {biome,seed,biomeLabel}>",
-  RULE:"Deterministic/fixed per session, random distributed across biomes, persists across city switches until reload"
-}
+@V:5@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXTENDED_SUITE_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
+§SPEC{CORE:"Real2ParallelAstralObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo"}
+§SESSION_CACHE{MAP:"Map<lat_lon_3dp, {biome,seed,biomeLabel}>"}
 §MATH_TX{
   T2K:(T+273.15)*0.1,W2XI:W*0.42,P2MU:(1013.25-P)*3.2+500,H2D:min(100,floor(H*1.15)),
   P2BUOY:(1013.25-P)*1.2,N_PART:60+floor(H*1.8),
   COLOR_MAP:{T<0:[205,"#7dd3fc"],T<18:[225,"#00f0ff"],T<28:[260,"#a855f7"],T>=28:[330,"#f59e0b"]},
   ISLAND_OSC:{bob:sin(t*0.001*s+p)*(12+W*0.2),sway:cos(t*0.0008*s+p)*(4+W*0.15)}
 }
+§CREATURES_AND_ANOMALIES{
+  LEVIATHAN:{interval:[22s,45s],body:whale_manta_spline,spores:stardust_trail,glow:"#00f0ff"},
+  SKIFFS:{count:2,speeds:[0.65,0.45],trails:true},
+  METEORS:{rate:0.35,speed:[4,8],tail_len:[60,140]},
+  MOON_PHASE:{synodic:29.53058867,calc:"(now-ref)%synodic",mask_arc:true,eclipse_new_moon:true},
+  GRAVITY_RIPPLES:{on_click:true,expand_rate:3.8,ring_double:true,chime_freq:[320,880]}
+}
+§DSP_MIXER_SUITE{
+  NO_DRONE:true,
+  LAYERS:{rain:1.0,birds:1.0,grass:1.0,ocean:1.0,wind:1.0,chimes:1.0},
+  FOCUS_BELL:{freqs:[528,792,1056],solfeggio:true,decay:3.5},
+  POMODORO:{focus:1500,rest:300,bell_on_end:true},
+  POSTCARD:{snap_png:true,stamp_overlay:true,hotkey:"P"}
+}
 §BIOMES{
-  MEGALOPOLIS:{layers:3,win_mat:true,spires:true,skyway_traffic:true},
-  PLAINS:{grass_cnt:180,sway:sin(t*0.003*(1+W*0.04)+phi)*(20*flex+W*0.8),trees:2,canopy_spores:true},
-  COAST:{waves:5,f:[0.008,0.011,0.014,0.017,0.02],amp:[8,12,16,20,24],beacon_rot:true},
-  ARCHIPELAGO:{islands:4,roots:true,monolith_rings:true},
-  GLACIER:{spires:18,prism_facets:true,glint:true}
+  MEGALOPOLIS:{layers:3,win_mat:true,spires:true},
+  PLAINS:{grass_cnt:180,sway:sin(t*0.003*(1+W*0.04)+phi)*(20*flex+W*0.8),trees:2},
+  COAST:{waves:5,f:[0.008,0.02],beacon_rot:true},
+  ARCHIPELAGO:{islands:4,roots:true},
+  GLACIER:{spires:18,prism_facets:true}
 }
-§DSP_NATURE_ONLY{
-  NO_DRONE_OR_HUM:true,XFADE_TAU:1.4,
-  L1_RAIN:{hp:1600,bp:3800,q:1.0,droplet_interval:140,drop_tx:{f_start:[2200,4800],decay:0.035}},
-  L2_BIRDS:{fm_c:[1318.5,1567.98,1760,2093,2349.32,2637,3135.96],mod_ratio:1.5,interval:2400,dur:0.24,echo:true},
-  L3_GRASS:{hp:650,bp:1100,q:2.0,lfo_f:0.18,lfo_gain:350},
-  L4_OCEAN:{hp:450,bp:1200,q:1.4,lfo_f:0.12,lfo_mod:600},
-  L5_CHIME:{pentatonic:[523.25,587.33,659.25,783.99,880,1046.5,1174.66],decay:1.2}
-}
-§MODULES{
-  WEB:{HTML:"index.html",CSS:"css/style.css",APP:"js/app.js",SVC:"js/weatherService.js",CVT:"js/converter.js",AUD:"js/audioSynthesizer.js",SKY:"js/renderer/sky.js",LAND:"js/renderer/landscape.js",FX:"js/renderer/weatherEffects.js",CRX:"js/renderer/canvasRenderer.js"},
-  PY_TARGET:{
-    ENG:"Pygame+ModernGL|PyQt6+QOpenGLWidget",
-    DSP:"numpy+sounddevice(44.1k/stream_callback)",
-    MAP:{"converter.js":"converter.py","landscape.js":"landscape.py","audioSynthesizer.js":"audio_synth.py","weatherService.js":"weather_service.py"}
-  }
-}
+§PY_TARGET{ENG:"Pygame+ModernGL|PyQt6",DSP:"numpy+sounddevice",MAP:{"creatures.js":"creatures.py","audioSynthesizer.js":"audio_synth.py"}}

@@ -1,6 +1,6 @@
 /**
  * App Main Controller
- * Integrates Real-time WeatherService (Session-Fixed Biomes), Converter, Dynamic Audio, and Multi-Biome Renderer
+ * Integrated with Celestial Focus Timer, Sound Mixer, Gravity Ripples, and Postcard Snapshot Export
  */
 
 import { WeatherService, PRESET_CITIES } from './weatherService.js';
@@ -17,35 +17,55 @@ class ObservatoryApp {
     this.currentTelemetry = null;
     this.currentTransmuted = null;
     this.logInterval = null;
+
+    // Focus / Pomodoro Timer State
+    this.timer = {
+      interval: null,
+      mode: 'focus', // 'focus' (25m) or 'break' (5m)
+      timeLeft: 25 * 60,
+      totalTime: 25 * 60,
+      isRunning: false
+    };
   }
 
   async init() {
     const canvas = document.getElementById('world-canvas');
     this.renderer = new CanvasRenderer(canvas);
 
-    // Link rain/crystal particle splashes to procedural pentatonic chimes
     this.renderer.setSplashAudioCallback((intensity) => {
       this.audioSynth.triggerCrystalChime(intensity);
     });
 
     this.setupUIEventListeners();
     this.setupCityModal();
+    this.setupMixerModal();
+    this.setupPomodoroTimer();
+    this.setupPostcardSnapshot();
+    this.setupInteractiveCanvasRipples(canvas);
 
-    // Initial weather fetch for Tokyo (Real-time live data)
     await this.loadCityWeather(PRESET_CITIES[0]);
 
     this.renderer.start();
     this.startObservationLogger();
 
-    // Periodic real weather refresh every 3 minutes
     setInterval(() => {
       this.loadCityWeather(this.weatherService.currentCity, true);
     }, 3 * 60 * 1000);
   }
 
   /**
-   * Fetch live weather data for city
+   * Interactive Gravity Ripple on Canvas Click
    */
+  setupInteractiveCanvasRipples(canvas) {
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.renderer.triggerGravityRipple(x, y);
+      this.audioSynth.triggerGravityWaveChime();
+    });
+  }
+
   async loadCityWeather(city, isSilent = false) {
     const cityLabel = document.getElementById('current-city-label');
     const syncStatus = document.getElementById('sync-status-text');
@@ -66,16 +86,12 @@ class ObservatoryApp {
     }
   }
 
-  /**
-   * Apply live telemetry and fixed session biome to renderer & audio
-   */
   applyTelemetry(telemetry) {
     const transmuted = WeatherConverter.transmute(telemetry);
     this.currentTransmuted = transmuted;
 
     this.updateHUD(telemetry, transmuted);
 
-    // Update Canvas Renderer with the city's fixed session biome and seed
     this.renderer.updateState(
       transmuted.renderParams, 
       transmuted.phenomenonType, 
@@ -83,7 +99,6 @@ class ObservatoryApp {
       telemetry.seed
     );
 
-    // Update Dynamic Multi-Layer Ambient Audio
     this.audioSynth.updateEnvironment({
       weatherType: transmuted.phenomenonType,
       biomeType: telemetry.biome,
@@ -101,13 +116,9 @@ class ObservatoryApp {
     document.getElementById('weather-badge').textContent = transmuted.weatherBadge;
     document.getElementById('poetic-quote').textContent = `“ ${transmuted.poeticDescription} ”`;
 
-    // Biome badge
     const biomeBadge = document.getElementById('current-biome-badge');
-    if (biomeBadge) {
-      biomeBadge.textContent = telemetry.biomeLabel;
-    }
+    if (biomeBadge) biomeBadge.textContent = telemetry.biomeLabel;
 
-    // Dual Metrics (Earth Live vs Parallel Transmuted)
     document.getElementById('metric-temp').textContent = `${telemetry.temperature.toFixed(1)}`;
     document.getElementById('metric-temp-dual').textContent = transmuted.dualTelemetry.etherCaloric;
 
@@ -120,7 +131,6 @@ class ObservatoryApp {
     document.getElementById('metric-wind').textContent = `${telemetry.windSpeed.toFixed(1)}`;
     document.getElementById('metric-wind-dual').textContent = transmuted.dualTelemetry.vectorDrift;
 
-    // Station Telemetry Details in Right Panel
     const liveTimeEl = document.getElementById('telemetry-live-time');
     if (liveTimeEl) liveTimeEl.textContent = telemetry.time;
 
@@ -128,8 +138,177 @@ class ObservatoryApp {
     if (windDirEl) windDirEl.textContent = `${telemetry.windDirection}°`;
   }
 
+  // =========================================================================
+  // CELESTIAL POMODORO FOCUS TIMER (25m / 5m)
+  // =========================================================================
+  setupPomodoroTimer() {
+    const timerBtn = document.getElementById('timer-toggle-play-btn');
+    const timerResetBtn = document.getElementById('timer-reset-btn');
+    const timerDisplay = document.getElementById('timer-time-display');
+    const timerModeBtn = document.getElementById('timer-mode-btn');
+
+    const updateTimerDisplay = () => {
+      const mins = Math.floor(this.timer.timeLeft / 60).toString().padStart(2, '0');
+      const secs = (this.timer.timeLeft % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `${mins}:${secs}`;
+    };
+
+    timerBtn.addEventListener('click', () => {
+      if (this.timer.isRunning) {
+        clearInterval(this.timer.interval);
+        this.timer.isRunning = false;
+        timerBtn.textContent = 'START';
+      } else {
+        this.timer.isRunning = true;
+        timerBtn.textContent = 'PAUSE';
+        this.timer.interval = setInterval(() => {
+          this.timer.timeLeft--;
+          updateTimerDisplay();
+
+          if (this.timer.timeLeft <= 0) {
+            clearInterval(this.timer.interval);
+            this.timer.isRunning = false;
+            timerBtn.textContent = 'START';
+
+            // Play Solfeggio Focus Harmony Bell
+            this.audioSynth.triggerFocusBell();
+
+            // Switch mode
+            if (this.timer.mode === 'focus') {
+              this.timer.mode = 'break';
+              this.timer.totalTime = 5 * 60;
+              this.timer.timeLeft = 5 * 60;
+              timerModeBtn.textContent = 'REST (5m)';
+              timerModeBtn.classList.add('break-mode');
+            } else {
+              this.timer.mode = 'focus';
+              this.timer.totalTime = 25 * 60;
+              this.timer.timeLeft = 25 * 60;
+              timerModeBtn.textContent = 'FOCUS (25m)';
+              timerModeBtn.classList.remove('break-mode');
+            }
+            updateTimerDisplay();
+          }
+        }, 1000);
+      }
+    });
+
+    timerResetBtn.addEventListener('click', () => {
+      clearInterval(this.timer.interval);
+      this.timer.isRunning = false;
+      timerBtn.textContent = 'START';
+      this.timer.timeLeft = this.timer.totalTime;
+      updateTimerDisplay();
+    });
+
+    timerModeBtn.addEventListener('click', () => {
+      clearInterval(this.timer.interval);
+      this.timer.isRunning = false;
+      timerBtn.textContent = 'START';
+      if (this.timer.mode === 'focus') {
+        this.timer.mode = 'break';
+        this.timer.totalTime = 5 * 60;
+        this.timer.timeLeft = 5 * 60;
+        timerModeBtn.textContent = 'REST (5m)';
+        timerModeBtn.classList.add('break-mode');
+      } else {
+        this.timer.mode = 'focus';
+        this.timer.totalTime = 25 * 60;
+        this.timer.timeLeft = 25 * 60;
+        timerModeBtn.textContent = 'FOCUS (25m)';
+        timerModeBtn.classList.remove('break-mode');
+      }
+      updateTimerDisplay();
+    });
+  }
+
+  // =========================================================================
+  // OBSERVATION POSTCARD SNAPSHOT (PNG Export)
+  // =========================================================================
+  setupPostcardSnapshot() {
+    const postcardBtn = document.getElementById('postcard-btn');
+    postcardBtn.addEventListener('click', () => {
+      const canvas = document.getElementById('world-canvas');
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = canvas.width;
+      offCanvas.height = canvas.height;
+      const ctx = offCanvas.getContext('2d');
+
+      // Draw Main Canvas
+      ctx.drawImage(canvas, 0, 0);
+
+      // Add Aesthetic Celestial Postcard Stamp Overlay
+      const dpr = window.devicePixelRatio || 1;
+      const w = offCanvas.width / dpr;
+      const h = offCanvas.height / dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Outer glowing frame
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, 20, w - 40, h - 40);
+
+      // Card Stamp Bottom Right
+      ctx.fillStyle = 'rgba(4, 9, 20, 0.75)';
+      ctx.fillRect(w - 320, h - 100, 290, 70);
+      ctx.strokeStyle = 'rgba(140, 185, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(w - 320, h - 100, 290, 70);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 13px "Cinzel", serif';
+      ctx.fillText('AETHERIA OBSERVATORY // POSTCARD', w - 305, h - 75);
+
+      ctx.fillStyle = '#00f0ff';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      const cityText = this.currentTelemetry ? `${this.currentTelemetry.city} [${this.currentTransmuted.phenomenonName}]` : 'ASTRAL STATION';
+      ctx.fillText(cityText, w - 305, h - 55);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillText(`REC: ${new Date().toLocaleString()}`, w - 305, h - 40);
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `Aetheria_Observatory_${Date.now()}.png`;
+      link.href = offCanvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  // =========================================================================
+  // SOUNDSCAPE MIXER MODAL
+  // =========================================================================
+  setupMixerModal() {
+    const mixerOpenBtn = document.getElementById('open-mixer-btn');
+    const mixerModal = document.getElementById('mixer-modal-overlay');
+    const closeBtn = document.getElementById('close-mixer-btn');
+
+    mixerOpenBtn.addEventListener('click', () => {
+      mixerModal.classList.add('open');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      mixerModal.classList.remove('open');
+    });
+
+    mixerModal.addEventListener('click', (e) => {
+      if (e.target === mixerModal) mixerModal.classList.remove('open');
+    });
+
+    // Wire individual sliders
+    const layers = ['rain', 'birds', 'grass', 'ocean', 'wind', 'chimes'];
+    layers.forEach(l => {
+      const slider = document.getElementById(`mix-${l}-slider`);
+      if (slider) {
+        slider.addEventListener('input', (e) => {
+          this.audioSynth.setLayerVolume(l, parseFloat(e.target.value));
+        });
+      }
+    });
+  }
+
   setupUIEventListeners() {
-    // 1. Audio Toggle & Volume
     const audioBtn = document.getElementById('audio-toggle-btn');
     const audioSlider = document.getElementById('audio-volume-slider');
 
@@ -161,7 +340,6 @@ class ObservatoryApp {
       this.audioSynth.setVolume(parseFloat(e.target.value));
     });
 
-    // 2. Ambient / Fullscreen Focus Mode
     const ambientBtn = document.getElementById('ambient-toggle-btn');
     const restoreHint = document.getElementById('ambient-restore-hint');
 
@@ -172,7 +350,6 @@ class ObservatoryApp {
     ambientBtn.addEventListener('click', toggleAmbient);
     restoreHint.addEventListener('click', toggleAmbient);
 
-    // Keyboard Shortcuts (F/Space: Ambient Mode, M: Mute/Unmute)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.key === 'f' || e.key === 'F' || e.key === ' ') {
@@ -180,10 +357,10 @@ class ObservatoryApp {
         toggleAmbient();
       } else if (e.key === 'm' || e.key === 'M') {
         audioBtn.click();
+      } else if (e.key === 'p' || e.key === 'P') {
+        document.getElementById('postcard-btn').click();
       }
     });
-
-    document.getElementById('world-canvas').addEventListener('dblclick', toggleAmbient);
 
     document.getElementById('fullscreen-btn').addEventListener('click', () => {
       if (!document.fullscreenElement) {
@@ -225,9 +402,7 @@ class ObservatoryApp {
     });
 
     modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) {
-        modalOverlay.classList.remove('open');
-      }
+      if (e.target === modalOverlay) modalOverlay.classList.remove('open');
     });
 
     let searchTimeout = null;
@@ -266,7 +441,6 @@ class ObservatoryApp {
 
   startObservationLogger() {
     const stream = document.getElementById('log-stream');
-    
     if (this.currentTransmuted) {
       const initLog = WeatherConverter.generateLogEntry(this.currentTransmuted);
       this.appendLog(initLog);
@@ -277,7 +451,7 @@ class ObservatoryApp {
         const log = WeatherConverter.generateLogEntry(this.currentTransmuted);
         this.appendLog(log);
       }
-    }, 9000);
+    }, 8500);
   }
 
   appendLog(log) {

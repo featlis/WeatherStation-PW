@@ -1,6 +1,7 @@
 /**
  * WeatherTransmutationConverter
  * Converts real Earth weather telemetry + Biome into Parallel Astral World parameters
+ * + Generates poetic observation logs & ancient celestial glyph transmissions
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -143,10 +144,16 @@ export class WeatherConverter {
       biomeLog = `浮遊列島が高度 ${transmuted.dualTelemetry.gravBuoyancy} で静止。霊脈根の光粒子放出を確認。`;
     }
 
+    // Rare glyph / ancient transmission log
+    const ancientGlyphs = ['᚛ᚨᛊᛏᚱᚨ᚜', '⟡ ⟐ ⟡ ◈', '〈0xAE78: RESONANCE〉', '✧･ﾟ* STARDUST CYCLE *･ﾟ✧'];
+    const hasGlyph = Math.random() < 0.22;
+
     const logs = [
       `[環境観測] ${biomeLog}`,
       `[天球現象] 現象『${transmuted.phenomenonName}』を観測。静謐指数 99.4%。`,
-      `[大気同期] 気温 ${transmuted.dualTelemetry.raw.temperature}℃ / 湿度 ${transmuted.dualTelemetry.raw.humidity}% / 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h。音響層が同期完了。`
+      `[生体探知] 天球上層に超巨大星鯨（Astral Leviathan）の生体エーテル波紋を確認。`,
+      `[大気同期] 気温 ${transmuted.dualTelemetry.raw.temperature}℃ / 湿度 ${transmuted.dualTelemetry.raw.humidity}% / 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h。音響層同期。`,
+      hasGlyph ? `[古代通信] 未知の星脈シグナルを受信: ${ancientGlyphs[Math.floor(Math.random() * ancientGlyphs.length)]}` : `[天文学] 月齢位相が同期。二重天球の引力バランス安定。`
     ];
 
     const randomIndex = Math.floor(Math.random() * logs.length);
