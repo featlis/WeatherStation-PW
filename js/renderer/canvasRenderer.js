@@ -4,7 +4,7 @@
  */
 
 import { SkyRenderer } from './sky.js';
-import { LandscapeRenderer } from './landscape.js';
+import { LandscapeRenderer, BIOME_TYPES } from './landscape.js';
 import { WeatherEffectsRenderer } from './weatherEffects.js';
 
 export class CanvasRenderer {
@@ -22,6 +22,7 @@ export class CanvasRenderer {
 
     this.currentParams = null;
     this.currentPhenomenon = null;
+    this.currentBiome = BIOME_TYPES.ARCHIPELAGO;
 
     this.isRunning = false;
     this.startTime = performance.now();
@@ -34,7 +35,7 @@ export class CanvasRenderer {
   }
 
   handleResize() {
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap at 2 for mobile/retina performance
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.width = window.innerWidth;
     this.height = window.innerHeight;
 
@@ -48,9 +49,18 @@ export class CanvasRenderer {
     }
   }
 
-  updateState(renderParams, phenomenonType) {
+  setBiome(biomeType, seed) {
+    this.currentBiome = biomeType;
+    this.landscapeRenderer.setBiome(biomeType, seed);
+  }
+
+  updateState(renderParams, phenomenonType, biomeType, seed) {
     this.currentParams = renderParams;
     this.currentPhenomenon = phenomenonType;
+    if (biomeType && (biomeType !== this.currentBiome || seed)) {
+      this.currentBiome = biomeType;
+      this.landscapeRenderer.setBiome(biomeType, seed || Math.random() * 10000);
+    }
     if (this.weatherEffects.particles.length === 0) {
       this.weatherEffects.initParticles(renderParams.particleCount || 100, this.width, this.height);
     }
@@ -89,10 +99,10 @@ export class CanvasRenderer {
     // 1. Sky & Celestial Layer
     this.skyRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 2. Landscape & Levitating Island Layer
+    // 2. Multi-Biome Landscape Layer
     this.landscapeRenderer.render(this.ctx, this.width, this.height, time, this.currentParams);
 
-    // 3. Weather Phenomenon Particles (Spores, Rain, Snow, Lightning)
+    // 3. Weather Phenomenon Particles
     this.weatherEffects.render(this.ctx, this.width, this.height, time, this.currentParams, this.currentPhenomenon);
   }
 }

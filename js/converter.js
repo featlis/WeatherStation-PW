@@ -1,7 +1,9 @@
 /**
  * WeatherTransmutationConverter
- * Converts real Earth weather telemetry into Parallel Astral World parameters
+ * Converts real Earth weather telemetry + Biome into Parallel Astral World parameters
  */
+
+import { BIOME_TYPES } from './renderer/landscape.js';
 
 export const PHENOMENON_TYPES = {
   CLEAR: 'CLEAR',
@@ -14,13 +16,9 @@ export const PHENOMENON_TYPES = {
 };
 
 export class WeatherConverter {
-  /**
-   * Convert raw telemetry into parallel universe state
-   */
   static transmute(telemetry) {
-    const { temperature, humidity, pressure, windSpeed, windDirection, weatherCode, isDay } = telemetry;
+    const { temperature, humidity, pressure, windSpeed, windDirection, weatherCode, isDay, biome } = telemetry;
 
-    // 1. Determine Phenomenon Category
     let phenomenonType = PHENOMENON_TYPES.CLEAR;
     let phenomenonName = '星環光芒';
     let phenomenonSub = 'Celestial Radiance';
@@ -67,41 +65,31 @@ export class WeatherConverter {
       poeticDescription = '紫紺の星素が限界値に達し、幾何学的な共鳴放電を放っています。';
     }
 
-    // 2. Transmuted Dimension Values (Dual Telemetry)
-    // Temperature -> Ether Caloric (κ: Kappa)
-    const etherCaloric = (temperature + 273.15) * 0.1; // Kelvin scaled
-    // Humidity -> Astral Density (%)
+    const etherCaloric = (temperature + 273.15) * 0.1;
     const astralDensity = Math.round(humidity * 1.15);
-    // Pressure -> Gravitational Buoyancy (μ: Mu)
     const gravBuoyancy = Math.round((1013.25 - pressure) * 3.2 + 500);
-    // Wind Speed -> Vector Drift (ξ: Xi)
     const vectorDrift = (windSpeed * 0.42).toFixed(1);
 
-    // 3. Visual Render Tuning Parameters
-    // Color Palette Shift based on Temperature
-    let skyHue = 220; // Default cool deep space blue
+    let skyHue = 220;
     let skySaturation = 70;
     let skyLightness = isDay ? 15 : 6;
-    let accentColor = '#00f0ff'; // Cyan default
+    let accentColor = '#00f0ff';
 
     if (temperature < 0) {
-      skyHue = 205; // Frost ice
+      skyHue = 205;
       accentColor = '#7dd3fc';
     } else if (temperature >= 0 && temperature < 18) {
-      skyHue = 225; // Deep teal / cyan
+      skyHue = 225;
       accentColor = '#00f0ff';
     } else if (temperature >= 18 && temperature < 28) {
-      skyHue = 260; // Violet celestial
+      skyHue = 260;
       accentColor = '#a855f7';
     } else {
-      skyHue = 330; // Plasma crimson/amber
+      skyHue = 330;
       accentColor = '#f59e0b';
     }
 
-    // Island Height based on Pressure (Lower pressure = Higher floating)
     const islandBuoyancy = (1013.25 - pressure) * 1.2;
-
-    // Particle Physics
     const particleSpeed = Math.max(0.5, windSpeed * 0.12);
     const particleCount = Math.min(260, Math.floor(60 + humidity * 1.8));
 
@@ -111,13 +99,15 @@ export class WeatherConverter {
       phenomenonSub,
       weatherBadge,
       poeticDescription,
+      biome: biome || BIOME_TYPES.ARCHIPELAGO,
+      biomeLabel: telemetry.biomeLabel || '並行世界領域',
       dualTelemetry: {
         raw: telemetry,
         etherCaloric: `${etherCaloric.toFixed(1)} κ`,
         astralDensity: `${Math.min(100, astralDensity)} %`,
         gravBuoyancy: `${gravBuoyancy} μ`,
         vectorDrift: `${vectorDrift} ξ/s`,
-        dimensionalZone: `第${Math.abs(Math.round((pressure * 17) % 89) + 1)}霊域`
+        dimensionalZone: telemetry.parallelCity || '並行観測区域'
       },
       renderParams: {
         skyHue,
@@ -137,16 +127,26 @@ export class WeatherConverter {
     };
   }
 
-  /**
-   * Generates a poetic log entry for observatory records
-   */
   static generateLogEntry(transmuted) {
+    const biome = transmuted.biome;
+    let biomeLog = '地勢スキャン完了。生体エーテル循環は平常です。';
+
+    if (biome === BIOME_TYPES.MEGALOPOLIS) {
+      biomeLog = '摩天楼エネルギーグリッドの微細共振音を感知。空中交通路安定。';
+    } else if (biome === BIOME_TYPES.PLAINS) {
+      biomeLog = '霊光草原の草葉が風速に応じ波状発光。天球鳥の微小な鳴声を検知。';
+    } else if (biome === BIOME_TYPES.COAST) {
+      biomeLog = '結晶海岸に打ち寄せる波光周期 8.2秒。星屑灯台の光芒照射中。';
+    } else if (biome === BIOME_TYPES.GLACIER) {
+      biomeLog = '極氷尖塔のプリズム屈折角が安定。ダイヤモンドダスト飛散中。';
+    } else if (biome === BIOME_TYPES.ARCHIPELAGO) {
+      biomeLog = `浮遊列島が高度 ${transmuted.dualTelemetry.gravBuoyancy} で静止。霊脈根の光粒子放出を確認。`;
+    }
+
     const logs = [
-      `[天球観測] 気圧変動(${transmuted.dualTelemetry.raw.pressure}hPa)を検知。浮遊島群が高度 ${transmuted.dualTelemetry.gravBuoyancy} へシフト。`,
-      `[星素霊脈] 湿度 ${transmuted.dualTelemetry.raw.humidity}%。大気中の発光粒子が凝集を開始。`,
-      `[エーテル流] 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h の偏西流動。オーロラリボンが共鳴中。`,
-      `[次元同期] 現象『${transmuted.phenomenonName}』を記録。静謐レベル安定。`,
-      `[深層通信] 観測局応答あり。外宇宙ノイズ指数 0.042 を維持。`
+      `[環境観測] ${biomeLog}`,
+      `[天球現象] 現象『${transmuted.phenomenonName}』を観測。静謐指数 99.4%。`,
+      `[大気同期] 気温 ${transmuted.dualTelemetry.raw.temperature}℃ / 湿度 ${transmuted.dualTelemetry.raw.humidity}% / 風速 ${transmuted.dualTelemetry.raw.windSpeed}km/h。音響層が同期完了。`
     ];
 
     const randomIndex = Math.floor(Math.random() * logs.length);

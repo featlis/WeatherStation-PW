@@ -1,53 +1,49 @@
-# 『並行世界の気象台』 Web版 完成記録 & 動作確認
+# 『並行世界の気象台』 プロシージャル・バイオーム & ダイナミック音響 実装完了
 
-実在する都市の気象データ（気温・風速・気圧・天候）を取得し、「架空の異世界の風景・気象現象」へとリアルタイム変換して描画・音響化するWeb観測所アプリケーションを実装しました。
+実在する都市の気象データをもとに、切り替えるたびに異なる架空の街並み・大自然（摩天楼、霊光草原、結晶海岸、浮遊列島、極氷晶界）をプロシージャル生成し、天候と地形にシームレス連動するアンビエント音響システムを実装しました。
 
 ---
 
-## 1. 実装成果物
+## 1. 新たに実装された機能
 
-| ファイル | 役割 |
-|---|---|
-| [index.html](file:///c:/Users/aggsh/Documents/WeatherStation-PW/index.html) | メイン画面（グラスモフィズムHUD、シミュレーションパネル、都市検索モーダル） |
-| [css/style.css](file:///c:/Users/aggsh/Documents/WeatherStation-PW/css/style.css) | デザインシステム（星幽ダークテーマ、ネオンルミネッセンス、HUDフェード切替） |
-| [js/app.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/app.js) | アプリケーション統合制御、キーバインド(`F`/`Space`/`M`)、周期観測ログ |
-| [js/weatherService.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/weatherService.js) | Open-Meteo API（登録・APIキー不要の気象データ取得 & ジオコーディング都市検索） |
-| [js/converter.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/converter.js) | 気象データ $\to$ 異世界パラメータ & 詩的観測日誌の自動生成 |
-| [js/audioSynthesizer.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/audioSynthesizer.js) | Web Audio API によるプロシージャル音響（外部音源ファイル不要、432Hz系ドローン、ペンタトニッククリスタルチャイム） |
-| [js/renderer/sky.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/renderer/sky.js) | 天球勾配、二重月、太陽光輪、プロシージャルオーロラ |
-| [js/renderer/landscape.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/renderer/landscape.js) | 浮力連動浮遊島、結晶モノリス、発光霊脈根、鏡面深淵 |
-| [js/renderer/weatherEffects.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/renderer/weatherEffects.js) | 蒼光雨胞子、反重力多面結晶、量子共鳴放電、着地波紋 |
-| [js/renderer/canvasRenderer.js](file:///c:/Users/aggsh/Documents/WeatherStation-PW/js/renderer/canvasRenderer.js) | 60FPS描画ループ、DPRRetina最適化マネージャ |
-| [DEV_NOTES.md](file:///c:/Users/aggsh/Documents/WeatherStation-PW/DEV_NOTES.md) | **開発思想・数理変換モデル・Pythonデスクトップ版移行メモ（永続参照用）** |
+### (1) 5つのプロシージャル・バイオーム (架空の風景)
+1. **星間摩天楼 (Megalopolis)**: パララックス多層ビル群、窓マトリクス発光、通信尖塔ビーコン、空中交通路。
+2. **霊光草原 (Plains)**: 風になびく数百本の微細な発光草ブレード、丘陵、胞子を放つ巨大霊樹。
+3. **結晶海岸 (Coast)**: 位相合成された波光アニメーション、崖の上の星屑灯台、天球への回転光芒。
+4. **浮遊列島 (Archipelago)**: 気圧連動浮力の反重力島、発光霊脈根、結晶モノリス。
+5. **極氷晶界 (Glacier)**: 多面体氷尖塔群、ダイヤモンドダスト、プリズム屈折光。
+- **地形再生成機能**: `✦ 再生成 (R)` ボタンまたは `R` キーで、いつでも即座に異なる形状の地形をランダム再生成。
+
+### (2) シームレス・ダイナミック環境音響 (Web Audio API)
+単調なループ音を排し、天候と地形の双方に応じて各レイヤーが滑らかにクロスフェード（1.6秒時定数）：
+- **雨の音**: ハイパス＋バンドパスノイズによる降雨テクスチャ ＋ ランダムな微小水滴インパルス。
+- **晴天・天球鳥**: FMシンセシスによるリアルで透明感のある鳥のさえずり（晴天・草原・海岸で自動発音）。
+- **風になびく草音**: 風速に同期してうねるバンドパスノイズ（草原バイオームでアクティブ）。
+- **波の音**: 8.3秒周期のLFOによる波浪スウェル音（海岸バイオームでアクティブ）。
+- **都市振動**: 65.4Hzの低周波エネルギーグリッド・ハム（摩天楼バイオームでアクティブ）。
+- **着地チャイム**: 発光雨粒が接地した瞬間のペンタトニック・クリスタル共鳴音。
 
 ---
 
 ## 2. 視覚的動作確認
 
-### (1) 初期描画（東京：リアルタイム同期）
-![初期画面](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\weather_station_initial_1788321117464.png)
+### (1) 星間摩天楼 (Megalopolis / 東京)
+![摩天楼バイオーム](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\megalopolis_biome_1788321655724.png)
 
-### (2) 静寂観察・作業用モード（HUD非表示：キーボード `F` または `Space`）
-![静寂観察モード](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\weather_station_ambient_view_1788321195109.png)
+### (2) 霊光草原・巨大霊樹 (Plains / 京都)
+![霊光草原バイオーム](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\reikou_prairie_biome_1788321665352.png)
 
-### (3) レイキャビク観測所への同期 & 音響アクティブ時
-![レイキャビク観測所](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\weather_station_final_1788321203543.png)
-
----
-
-## 3. 主な機能と使い方
-
-1. **作業用環境映像（HUD非表示）**:
-   - キーボードの `F` または `Space`、もしくは画面右上ボタンでUIを完全に非表示にし、純粋な異世界の風景・降雨・オーロラを画面の片隅や全画面に常駐できます。
-2. **プロシージャル・アンビエントBGM**:
-   - 右上の音声アイコンまたは `M` キーで再生開始。外部音源を一切使わず、ブラウザ内部で癒やしのドローンと雨粒衝突音（クリスタルチャイム）をリアルタイム合成します。
-3. **世界観測都市の選択**:
-   - ヘッダーの都市名をクリックすると、東京・レイキャビク・ロンドン・カイロ・ニューヨークなどの主要都市プリセットや、任意都市の検索が可能です。
-4. **現象シミュレータ**:
-   - 右下のボタンから「蒼光星屑雨」「反重力結晶」「量子共鳴放電」などの現象を手動でいつでも切り替えて楽しめます。
+### (3) 結晶海岸・星屑の灯台 (Coast / ホノルル)
+![結晶海岸バイオーム](C:\Users\aggsh\.gemini\antigravity-ide\brain\5f6f27aa-4efc-47da-9d3f-5857bde25c8c\kesshou_coast_biome_1788321672029.png)
 
 ---
 
-## 4. 次のステップ（Python / 非HTML Windowsデスクトップ版）への準備
-変換ロジック（`converter.js`）および数式は [DEV_NOTES.md](file:///c:/Users/aggsh/Documents/WeatherStation-PW/DEV_NOTES.md) に整理して記録済みです。
-次の指示をいただき次第、Python (`Pygame` + `ModernGL` または `PyQt6` / `CustomTkinter`) によるWindowsネイティブ版の実装に即座に着手できます。
+## 3. ショートカットキー一覧
+- <kbd>F</kbd> または <kbd>Space</kbd> : **静寂観察・環境映像モード（HUD非表示）**
+- <kbd>R</kbd> : **地形のランダム再生成（現在のバイオームの形状を再構築）**
+- <kbd>M</kbd> : **環境音響のミュート / 再生トグル**
+
+---
+
+## 4. 開発メモ
+本拡張の数理モデル、音響合成構造、およびPythonネイティブ版（非HTML）へのマッピング仕様は [DEV_NOTES.md](file:///c:/Users/aggsh/Documents/WeatherStation-PW/DEV_NOTES.md) に更新・記録完了しています。

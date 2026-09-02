@@ -1,12 +1,13 @@
 /**
  * App Main Controller
- * Integrates WeatherService, Converter, AudioSynthesizer, and CanvasRenderer
+ * Integrates WeatherService, Converter, AudioSynthesizer (Dynamic Multi-Layer), and Multi-Biome Renderer
  */
 
 import { WeatherService, PRESET_CITIES } from './weatherService.js';
-import { WeatherConverter, PHENOMENON_TYPES } from './converter.js';
+import { WeatherConverter } from './converter.js';
 import { AudioSynthesizer } from './audioSynthesizer.js';
 import { CanvasRenderer } from './renderer/canvasRenderer.js';
+import { BIOME_TYPES } from './renderer/landscape.js';
 
 class ObservatoryApp {
   constructor() {
@@ -16,8 +17,8 @@ class ObservatoryApp {
 
     this.currentTelemetry = null;
     this.currentTransmuted = null;
+    this.currentBiome = BIOME_TYPES.MEGALOPOLIS;
     this.isSimulationMode = false;
-    this.simParams = null;
 
     this.logInterval = null;
   }
@@ -26,7 +27,6 @@ class ObservatoryApp {
     const canvas = document.getElementById('world-canvas');
     this.renderer = new CanvasRenderer(canvas);
 
-    // Link splash impact to crystal audio chime
     this.renderer.setSplashAudioCallback((intensity) => {
       this.audioSynth.triggerCrystalChime(intensity);
     });
@@ -34,17 +34,14 @@ class ObservatoryApp {
     this.setupUIEventListeners();
     this.setupCityModal();
     this.setupSimulationControls();
+    this.setupBiomeControls();
 
-    // Initial weather fetch for Tokyo
+    // Initial weather fetch for Tokyo (Megalopolis)
     await this.loadCityWeather(PRESET_CITIES[0]);
 
-    // Start 60fps render loop
     this.renderer.start();
-
-    // Start auto-observation log generator
     this.startObservationLogger();
 
-    // Periodic weather refresh every 5 minutes
     setInterval(() => {
       if (!this.isSimulationMode) {
         this.loadCityWeather(this.weatherService.currentCity, true);
@@ -52,9 +49,6 @@ class ObservatoryApp {
     }, 5 * 60 * 1000);
   }
 
-  /**
-   * Load weather for specific city & transmute
-   */
   async loadCityWeather(city, isSilent = false) {
     if (!isSilent) {
       document.getElementById('current-city-label').textContent = '次元同期中...';
@@ -62,43 +56,44 @@ class ObservatoryApp {
 
     const telemetry = await this.weatherService.fetchWeather(city);
     this.currentTelemetry = telemetry;
-    this.applyTelemetry(telemetry);
+    this.currentBiome = telemetry.biome || BIOME_TYPES.ARCHIPELAGO;
+    this.applyTelemetry(telemetry, Math.random() * 10000);
   }
 
-  /**
-   * Apply telemetry data to converter, renderer, and audio
-   */
-  applyTelemetry(telemetry) {
+  applyTelemetry(telemetry, seed = Math.random() * 10000) {
     const transmuted = WeatherConverter.transmute(telemetry);
     this.currentTransmuted = transmuted;
 
-    // Update UI Elements
     this.updateHUD(telemetry, transmuted);
 
-    // Update Canvas Renderer
-    this.renderer.updateState(transmuted.renderParams, transmuted.phenomenonType);
+    // Update Multi-Biome Canvas Renderer
+    this.renderer.updateState(transmuted.renderParams, transmuted.phenomenonType, telemetry.biome, seed);
 
-    // Update Audio Synthesizer parameters
-    this.audioSynth.updateParameters({
+    // Update Dynamic Ambient Audio Environment
+    this.audioSynth.updateEnvironment({
+      weatherType: transmuted.phenomenonType,
+      biomeType: telemetry.biome,
       windSpeed: telemetry.windSpeed,
       temperature: telemetry.temperature,
       humidity: telemetry.humidity
     });
   }
 
-  /**
-   * Update all DOM elements in HUD
-   */
   updateHUD(telemetry, transmuted) {
-    // City & Phenomenon titles
     document.getElementById('current-city-label').textContent = telemetry.city;
-    document.getElementById('parallel-dimension-title').textContent = transmuted.dualTelemetry.dimensionalZone;
+    document.getElementById('parallel-dimension-title').textContent = `${transmuted.dualTelemetry.dimensionalZone} // ${telemetry.biomeLabel || '並行世界'}`;
     document.getElementById('phenomenon-name').textContent = transmuted.phenomenonName;
     document.getElementById('phenomenon-sub').textContent = transmuted.phenomenonSub;
     document.getElementById('weather-badge').textContent = transmuted.weatherBadge;
     document.getElementById('poetic-quote').textContent = `“ ${transmuted.poeticDescription} ”`;
 
-    // Metrics - Dual display
+    // Biome badge
+    const biomeBadge = document.getElementById('current-biome-badge');
+    if (biomeBadge) {
+      biomeBadge.textContent = telemetry.biomeLabel || telemetry.biome;
+    }
+
+    // Dual Metrics
     document.getElementById('metric-temp').textContent = `${telemetry.temperature.toFixed(1)}`;
     document.getElementById('metric-temp-dual').textContent = transmuted.dualTelemetry.etherCaloric;
 
@@ -110,13 +105,14 @@ class ObservatoryApp {
 
     document.getElementById('metric-wind').textContent = `${telemetry.windSpeed.toFixed(1)}`;
     document.getElementById('metric-wind-dual').textContent = transmuted.dualTelemetry.vectorDrift;
+
+    // Update active biome chip
+    document.querySelectorAll('.biome-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.biome === telemetry.biome);
+    });
   }
 
-  /**
-   * Setup UI click and keyboard events
-   */
   setupUIEventListeners() {
-    // 1. Audio Toggle & Volume
     const audioBtn = document.getElementById('audio-toggle-btn');
     const audioSlider = document.getElementById('audio-volume-slider');
 
@@ -132,22 +128,39 @@ class ObservatoryApp {
           <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
         </svg>
       `;
+
+      if (playing && this.currentTransmuted) {
+        this.audioSynth.updateEnvironment({
+          weatherType: this.currentTransmuted.phenomenonType,
+          biomeType: this.currentTelemetry.biome,
+          windSpeed: this.currentTelemetry.windSpeed,
+          temperature: this.currentTelemetry.temperature,
+          humidity: this.currentTelemetry.humidity
+        });
+      }
     });
 
     audioSlider.addEventListener('input', (e) => {
       this.audioSynth.setVolume(parseFloat(e.target.value));
     });
 
-    // Soundscape Mode Chips
-    document.querySelectorAll('.mode-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        this.audioSynth.setMode(chip.dataset.mode);
+    // Re-roll landscape seed button (飽きが来ないように即座に地形を再生成)
+    const rerollBtn = document.getElementById('reroll-landscape-btn');
+    if (rerollBtn) {
+      rerollBtn.addEventListener('click', () => {
+        if (this.currentTelemetry) {
+          const newSeed = Math.random() * 99999;
+          this.renderer.setBiome(this.currentTelemetry.biome, newSeed);
+          const log = {
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            text: `[次元再構成] ${this.currentTelemetry.biomeLabel} の位相座標を再生成しました。`
+          };
+          this.appendLog(log);
+        }
       });
-    });
+    }
 
-    // 2. Ambient / Fullscreen Focus Mode
+    // Ambient / Fullscreen Focus Mode
     const ambientBtn = document.getElementById('ambient-toggle-btn');
     const restoreHint = document.getElementById('ambient-restore-hint');
 
@@ -158,7 +171,6 @@ class ObservatoryApp {
     ambientBtn.addEventListener('click', toggleAmbient);
     restoreHint.addEventListener('click', toggleAmbient);
 
-    // Keyboard Shortcuts (F: Ambient Mode, M: Mute/Unmute, Space: Ambient)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.key === 'f' || e.key === 'F' || e.key === ' ') {
@@ -166,13 +178,13 @@ class ObservatoryApp {
         toggleAmbient();
       } else if (e.key === 'm' || e.key === 'M') {
         audioBtn.click();
+      } else if (e.key === 'r' || e.key === 'R') {
+        if (rerollBtn) rerollBtn.click();
       }
     });
 
-    // Double click background to toggle ambient focus
     document.getElementById('world-canvas').addEventListener('dblclick', toggleAmbient);
 
-    // Fullscreen Action
     document.getElementById('fullscreen-btn').addEventListener('click', () => {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -182,9 +194,31 @@ class ObservatoryApp {
     });
   }
 
-  /**
-   * City selector & search modal
-   */
+  setupBiomeControls() {
+    const biomeButtons = document.querySelectorAll('.biome-btn');
+    const biomeLabels = {
+      [BIOME_TYPES.MEGALOPOLIS]: '星間摩天楼 (Megalopolis)',
+      [BIOME_TYPES.PLAINS]: '霊光草原・巨大霊樹 (Plains)',
+      [BIOME_TYPES.COAST]: '結晶海岸・波光 (Coast)',
+      [BIOME_TYPES.ARCHIPELAGO]: '浮遊列島・神殿 (Archipelago)',
+      [BIOME_TYPES.GLACIER]: '極氷晶界・尖塔 (Glacier)'
+    };
+
+    biomeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        biomeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const selectedBiome = btn.dataset.biome;
+        if (this.currentTelemetry) {
+          this.currentTelemetry.biome = selectedBiome;
+          this.currentTelemetry.biomeLabel = biomeLabels[selectedBiome];
+          this.applyTelemetry(this.currentTelemetry, Math.random() * 10000);
+        }
+      });
+    });
+  }
+
   setupCityModal() {
     const cityBtn = document.getElementById('city-select-btn');
     const modalOverlay = document.getElementById('city-modal-overlay');
@@ -192,9 +226,11 @@ class ObservatoryApp {
     const searchResults = document.getElementById('search-results');
     const presetContainer = document.getElementById('preset-cities');
 
-    // Populate Presets
     presetContainer.innerHTML = PRESET_CITIES.map((c, i) => `
-      <div class="preset-city-item" data-index="${i}">${c.name}</div>
+      <div class="preset-city-item" data-index="${i}">
+        <div>${c.name}</div>
+        <div style="font-size: 0.68rem; color: var(--accent-cyan);">${c.biomeLabel}</div>
+      </div>
     `).join('');
 
     presetContainer.querySelectorAll('.preset-city-item').forEach(item => {
@@ -217,7 +253,6 @@ class ObservatoryApp {
       }
     });
 
-    // Geocoding Search with Debounce
     let searchTimeout = null;
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
@@ -238,7 +273,7 @@ class ObservatoryApp {
         searchResults.innerHTML = results.map(r => `
           <div class="preset-city-item custom-search-item" style="text-align: left; margin-bottom: 6px;">
             <div style="color: #fff; font-weight: 500;">${r.name}</div>
-            <div style="font-size: 0.7rem; color: var(--accent-cyan);">${r.parallelName}</div>
+            <div style="font-size: 0.7rem; color: var(--accent-cyan);">${r.parallelName} [${r.biomeLabel}]</div>
           </div>
         `).join('');
 
@@ -253,9 +288,6 @@ class ObservatoryApp {
     });
   }
 
-  /**
-   * Manual Simulation & Phenomenon switcher
-   */
   setupSimulationControls() {
     const presetBtns = document.querySelectorAll('.sim-preset-btn');
     presetBtns.forEach(btn => {
@@ -287,6 +319,8 @@ class ObservatoryApp {
         const simTelemetry = {
           city: `[仮想観測] ${btn.textContent.trim()}`,
           parallelCity: 'シミュレーション次元',
+          biome: this.currentTelemetry ? this.currentTelemetry.biome : BIOME_TYPES.ARCHIPELAGO,
+          biomeLabel: this.currentTelemetry ? this.currentTelemetry.biomeLabel : '浮遊列島',
           temperature: temp,
           humidity: humidity,
           pressure: pressure,
@@ -302,13 +336,9 @@ class ObservatoryApp {
     });
   }
 
-  /**
-   * Periodically appends poetic observation logs
-   */
   startObservationLogger() {
     const stream = document.getElementById('log-stream');
     
-    // Add initial log
     if (this.currentTransmuted) {
       const initLog = WeatherConverter.generateLogEntry(this.currentTransmuted);
       this.appendLog(initLog);
@@ -335,14 +365,12 @@ class ObservatoryApp {
 
     stream.insertBefore(el, stream.firstChild);
 
-    // Keep max 8 logs
     while (stream.children.length > 8) {
       stream.removeChild(stream.lastChild);
     }
   }
 }
 
-// Bootstrap on DOM loaded
 window.addEventListener('DOMContentLoaded', () => {
   const app = new ObservatoryApp();
   app.init();

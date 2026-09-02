@@ -1,15 +1,14 @@
 /* ==========================================================================
-   『並行世界の気象台』 Design System & Stylesheet
+   『並行世界の気象台』 Design System & Stylesheet (Multi-Biome & Dynamic Sound)
    Theme: Celestial Ether / Astral Glassmorphism
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@200;300;400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 :root {
-  /* Color Palette - Celestial & Ethereal */
   --bg-deep-space: #030712;
-  --bg-glass-card: rgba(8, 14, 28, 0.58);
-  --bg-glass-card-hover: rgba(14, 24, 46, 0.72);
+  --bg-glass-card: rgba(8, 14, 28, 0.62);
+  --bg-glass-card-hover: rgba(14, 24, 46, 0.78);
   --bg-glass-header: rgba(4, 9, 20, 0.7);
   
   --border-glass: rgba(140, 185, 255, 0.16);
@@ -43,7 +42,6 @@
   --transition-fast: all 0.2s ease;
 }
 
-/* Global Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -64,7 +62,6 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background Canvas Layer */
 #canvas-container {
   position: fixed;
   top: 0;
@@ -80,7 +77,6 @@ html, body {
   display: block;
 }
 
-/* UI Overlay Layer */
 #app-container {
   position: relative;
   width: 100vw;
@@ -89,12 +85,11 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 24px 28px;
+  padding: 20px 26px;
   pointer-events: none;
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-/* Ambient Mode (HUD hidden) */
 body.ambient-mode #app-container {
   opacity: 0;
   pointer-events: none;
@@ -106,12 +101,10 @@ body.ambient-mode #ambient-restore-hint {
   pointer-events: auto;
 }
 
-/* Make interactive panels clickable */
 .interactive {
   pointer-events: auto;
 }
 
-/* Glassmorphism Generic Card */
 .glass-panel {
   background: var(--bg-glass-card);
   backdrop-filter: blur(20px);
@@ -145,8 +138,8 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-sm);
   background: radial-gradient(circle at 30% 30%, rgba(0, 240, 255, 0.4), rgba(168, 85, 247, 0.15) 70%, transparent);
   border: 1px solid var(--border-glass-glow);
@@ -168,8 +161,8 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .brand-logo svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   fill: var(--accent-cyan);
   z-index: 1;
   filter: drop-shadow(0 0 4px var(--accent-cyan));
@@ -186,7 +179,7 @@ body.ambient-mode #ambient-restore-hint {
 
 .app-title {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   background: linear-gradient(135deg, #ffffff 40%, var(--accent-cyan) 100%);
@@ -196,18 +189,17 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .app-subtitle {
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
 
-/* Header Controls & City Selector */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .city-select-wrapper {
@@ -220,13 +212,13 @@ body.ambient-mode #ambient-restore-hint {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-full);
   background: var(--bg-glass-card);
   border: 1px solid var(--border-glass);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -255,8 +247,8 @@ body.ambient-mode #ambient-restore-hint {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   background: var(--bg-glass-card);
   border: 1px solid var(--border-glass);
@@ -280,21 +272,21 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 /* ==========================================================================
-   MAIN CONTENT / HUD LAYOUT
+   MAIN CONTENT / HUD GRID
    ========================================================================== */
 .main-hud-grid {
   display: grid;
-  grid-template-columns: 340px 1fr 340px;
-  gap: 20px;
-  height: calc(100vh - 170px);
-  margin-top: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: 330px 1fr 330px;
+  gap: 18px;
+  height: calc(100vh - 150px);
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .hud-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   height: 100%;
 }
 
@@ -306,27 +298,25 @@ body.ambient-mode #ambient-restore-hint {
   pointer-events: none;
 }
 
-/* ==========================================================================
-   OBSERVATORY TELEMETRY CARD (LEFT PANEL)
-   ========================================================================== */
+/* Telemetry Card */
 .telemetry-card {
-  padding: 18px 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 .card-title {
   font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   letter-spacing: 0.06em;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -334,8 +324,8 @@ body.ambient-mode #ambient-restore-hint {
 
 .card-tag {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  padding: 2px 8px;
+  font-size: 0.68rem;
+  padding: 2px 7px;
   border-radius: var(--radius-full);
   background: rgba(0, 240, 255, 0.12);
   color: var(--accent-cyan);
@@ -346,7 +336,7 @@ body.ambient-mode #ambient-restore-hint {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .phenomenon-display {
@@ -355,7 +345,7 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .phenomenon-name {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #fff;
@@ -363,37 +353,36 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .phenomenon-sub {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
 
 .weather-badge {
-  font-size: 2.2rem;
+  font-size: 2rem;
   filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
 }
 
 .telemetry-metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .metric-box {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .metric-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -405,32 +394,94 @@ body.ambient-mode #ambient-restore-hint {
 
 .metric-val {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .metric-unit {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
 }
 
 .metric-dual {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--accent-cyan);
   opacity: 0.85;
 }
 
-/* ==========================================================================
-   OBSERVATION LOG STREAM (LEFT PANEL BOTTOM)
-   ========================================================================== */
+/* Biome Selection Chips in Telemetry */
+.biome-selector-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.biome-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.reroll-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 4px;
+  color: var(--accent-cyan);
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.reroll-btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+.biome-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.biome-btn {
+  padding: 5px 2px;
+  text-align: center;
+  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.biome-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.biome-btn.active {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: var(--accent-cyan);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+/* Logs Stream */
 .logs-card {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 18px;
-  min-height: 180px;
-  max-height: 280px;
+  padding: 14px 16px;
+  min-height: 140px;
+  max-height: 240px;
 }
 
 .log-stream-content {
@@ -438,9 +489,9 @@ body.ambient-mode #ambient-restore-hint {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding-right: 4px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .log-stream-content::-webkit-scrollbar {
@@ -455,11 +506,11 @@ body.ambient-mode #ambient-restore-hint {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.74rem;
+  line-height: 1.4;
   border-left: 2px solid var(--accent-cyan);
   padding-left: 8px;
-  animation: fadeInLog 0.5s ease-out;
+  animation: fadeInLog 0.4s ease-out;
 }
 
 @keyframes fadeInLog {
@@ -469,7 +520,7 @@ body.ambient-mode #ambient-restore-hint {
 
 .log-timestamp {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
 }
 
@@ -477,54 +528,30 @@ body.ambient-mode #ambient-restore-hint {
   color: var(--text-secondary);
 }
 
-/* ==========================================================================
-   AUDIO & SIMULATION PANELS (RIGHT PANEL)
-   ========================================================================== */
+/* Right Panels */
 .control-card {
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.audio-controls {
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.audio-toggle-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.audio-label-group {
+.audio-controls {
   display: flex;
   flex-direction: column;
-}
-
-.audio-title {
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.audio-subtitle {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  gap: 10px;
 }
 
 .slider-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .slider-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -551,66 +578,30 @@ body.ambient-mode #ambient-restore-hint {
   transition: transform 0.15s ease;
 }
 
-.custom-range::-webkit-slider-thumb:hover {
-  transform: scale(1.25);
-}
-
-.soundscape-modes {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.mode-chip {
-  flex: 1;
-  text-align: center;
-  padding: 6px 0;
-  font-size: 0.72rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.mode-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-}
-
-.mode-chip.active {
-  background: rgba(0, 240, 255, 0.15);
-  border-color: var(--accent-cyan);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-}
-
-/* Simulation Section */
 .simulation-card {
   flex: 1;
-  padding: 16px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .sim-presets-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .sim-preset-btn {
-  padding: 8px;
+  padding: 7px;
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -627,17 +618,15 @@ body.ambient-mode #ambient-restore-hint {
   color: #fff;
 }
 
-/* ==========================================================================
-   CENTER POETIC SUBTITLE / FOOTER
-   ========================================================================== */
+/* Center & Footer */
 .center-poetic-quote {
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .poetic-line {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: rgba(230, 245, 255, 0.9);
   letter-spacing: 0.12em;
   text-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
@@ -649,7 +638,7 @@ body.ambient-mode #ambient-restore-hint {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -664,19 +653,18 @@ body.ambient-mode #ambient-restore-hint {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 0.7rem;
+  padding: 1px 5px;
+  font-size: 0.68rem;
   color: var(--text-secondary);
 }
 
-/* Ambient Mode Restore Button */
 #ambient-restore-hint {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: rgba(4, 9, 20, 0.5);
+  background: rgba(4, 9, 20, 0.6);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 8px 16px;
   border-radius: var(--radius-full);
   color: var(--text-muted);
@@ -692,10 +680,10 @@ body.ambient-mode #ambient-restore-hint {
 #ambient-restore-hint:hover {
   color: var(--accent-cyan);
   border-color: var(--accent-cyan);
-  background: rgba(4, 9, 20, 0.8);
+  background: rgba(4, 9, 20, 0.85);
 }
 
-/* Modal: City Search */
+/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -719,7 +707,7 @@ body.ambient-mode #ambient-restore-hint {
 }
 
 .city-modal {
-  width: 460px;
+  width: 480px;
   max-width: 90vw;
   padding: 24px;
   display: flex;
@@ -746,7 +734,7 @@ body.ambient-mode #ambient-restore-hint {
   border-radius: var(--radius-md);
   color: #fff;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   outline: none;
   transition: var(--transition-fast);
 }
@@ -759,18 +747,18 @@ body.ambient-mode #ambient-restore-hint {
 
 .preset-cities-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
 .preset-city-item {
-  padding: 10px;
-  text-align: center;
+  padding: 8px 10px;
+  text-align: left;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   transition: var(--transition-fast);
 }
 
@@ -780,14 +768,10 @@ body.ambient-mode #ambient-restore-hint {
   color: #fff;
 }
 
-/* Responsive adjustments */
 @media (max-width: 1024px) {
   .main-hud-grid {
     grid-template-columns: 1fr;
     height: auto;
     overflow-y: auto;
-  }
-  .hud-column {
-    height: auto;
   }
 }
