@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>並行世界の気象台 (Aetheria Observatory) - 観察・静寂型気象変換ステーション</title>
+  <meta name="description" content="実在する都市の気象データを異世界の幻想的な風景とプロシージャル・アンビエント音響にリアルタイム変換するWeb観測所。">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
+</head>
+<body>
+
+  <!-- Fullscreen WebGL/2D Canvas Background -->
+  <div id="canvas-container">
+    <canvas id="world-canvas"></canvas>
+  </div>
+
+  <!-- HUD Interface Layer -->
+  <div id="app-container">
+
+    <!-- Header Section -->
+    <header class="header-bar interactive">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1 class="app-title">並行世界の気象台</h1>
+          <span class="app-subtitle" id="parallel-dimension-title">PARALLEL OBSERVATORY // 第7観測区</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- City Selector Button -->
+        <div class="city-select-wrapper">
+          <button class="city-select-btn" id="city-select-btn" title="観測都市を変更">
+            <span class="status-dot"></span>
+            <span id="current-city-label">東京 (Tokyo)</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Audio Synthesizer Toggle Button -->
+        <button class="action-btn" id="audio-toggle-btn" title="アンビエントBGM (Mキー)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </button>
+
+        <!-- Ambient Mode Toggle (Focus mode) -->
+        <button class="action-btn" id="ambient-toggle-btn" title="HUD非表示 / 静寂観察モード (Fキー)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+        </button>
+
+        <!-- Fullscreen Button -->
+        <button class="action-btn" id="fullscreen-btn" title="全画面表示">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main HUD Grid -->
+    <main class="main-hud-grid">
+
+      <!-- Left Column: Dual Telemetry & Observatory Logs -->
+      <section class="hud-column">
+        <!-- Telemetry Card -->
+        <div class="glass-panel telemetry-card interactive">
+          <div class="card-header">
+            <span class="card-title">次元気象テレメトリ</span>
+            <span class="card-tag">SYNCHRONIZED</span>
+          </div>
+
+          <div class="telemetry-row-hero">
+            <div class="phenomenon-display">
+              <span class="phenomenon-name" id="phenomenon-name">蒼光星屑雨</span>
+              <span class="phenomenon-sub" id="phenomenon-sub">Bioluminescent Spore Rain</span>
+            </div>
+            <div class="weather-badge" id="weather-badge">💧</div>
+          </div>
+
+          <!-- Dual Telemetry Grid (Real vs Transmuted) -->
+          <div class="telemetry-metrics-grid">
+            <div class="metric-box">
+              <span class="metric-label">気温 / 星素体温</span>
+              <div class="metric-value-group">
+                <span class="metric-val" id="metric-temp">--</span>
+                <span class="metric-unit">°C</span>
+              </div>
+              <span class="metric-dual" id="metric-temp-dual">-- κ</span>
+            </div>
+
+            <div class="metric-box">
+              <span class="metric-label">湿度 / 霊脈密度</span>
+              <div class="metric-value-group">
+                <span class="metric-val" id="metric-humidity">--</span>
+                <span class="metric-unit">%</span>
+              </div>
+              <span class="metric-dual" id="metric-humidity-dual">-- %</span>
+            </div>
+
+            <div class="metric-box">
+              <span class="metric-label">気圧 / 浮遊高度</span>
+              <div class="metric-value-group">
+                <span class="metric-val" id="metric-pressure">--</span>
+                <span class="metric-unit">hPa</span>
+              </div>
+              <span class="metric-dual" id="metric-pressure-dual">-- μ</span>
+            </div>
+
+            <div class="metric-box">
+              <span class="metric-label">風速 / エーテル流速</span>
+              <div class="metric-value-group">
+                <span class="metric-val" id="metric-wind">--</span>
+                <span class="metric-unit">km/h</span>
+              </div>
+              <span class="metric-dual" id="metric-wind-dual">-- ξ/s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Observatory Log Stream -->
+        <div class="glass-panel logs-card interactive">
+          <div class="card-header">
+            <span class="card-title">天球観測日誌 (LOGS)</span>
+            <span class="card-tag" style="color: var(--accent-emerald); border-color: rgba(0, 255, 178, 0.3);">REC</span>
+          </div>
+          <div class="log-stream-content" id="log-stream">
+            <!-- Logs injected dynamically by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Column: Atmospheric Poetics -->
+      <section class="hud-center">
+        <div class="center-poetic-quote">
+          <p class="poetic-line" id="poetic-quote">“ 蒼光の星屑が空を満たし、静寂な時が流れています ”</p>
+        </div>
+      </section>
+
+      <!-- Right Column: Generative Audio & Simulation Controls -->
+      <section class="hud-column">
+        <!-- Audio Synthesizer Control Card -->
+        <div class="glass-panel control-card interactive">
+          <div class="card-header">
+            <span class="card-title">生成音響 (WEB AUDIO SYNTH)</span>
+            <span class="card-tag">432Hz HARMONICS</span>
+          </div>
+
+          <div class="audio-controls">
+            <div class="audio-toggle-row">
+              <div class="audio-label-group">
+                <span class="audio-title">環境アンビエント音響</span>
+                <span class="audio-subtitle">作業・瞑想用プロシージャル生成音</span>
+              </div>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>MASTER GAIN</span>
+                <span>VOLUME</span>
+              </div>
+              <input type="range" class="custom-range" id="audio-volume-slider" min="0" max="1" step="0.01" value="0.45">
+            </div>
+
+            <div class="soundscape-modes">
+              <div class="mode-chip active" data-mode="sanctuary">静寂 Sanctuary</div>
+              <div class="mode-chip" data-mode="rain">蒼光雨 Rain</div>
+              <div class="mode-chip" data-mode="void">深淵 Void</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dimensional Simulation Card -->
+        <div class="glass-panel simulation-card interactive">
+          <div class="card-header">
+            <span class="card-title">現象シミュレータ (SIMULATION)</span>
+            <span class="card-tag">OVERRIDE</span>
+          </div>
+
+          <p style="font-size: 0.72rem; color: var(--text-muted);">
+            各地の気象と独立して、異世界の天候現象を手動で体験できます。
+          </p>
+
+          <div class="sim-presets-grid">
+            <button class="sim-preset-btn" data-preset="rain">
+              <span>💧</span> 蒼光星屑雨
+            </button>
+            <button class="sim-preset-btn" data-preset="snow">
+              <span>❄️</span> 反重力結晶
+            </button>
+            <button class="sim-preset-btn" data-preset="thunder">
+              <span>⚡</span> 量子共鳴放電
+            </button>
+            <button class="sim-preset-btn" data-preset="clear">
+              <span>✨</span> 星環光芒
+            </button>
+            <button class="sim-preset-btn" data-preset="clouds" style="grid-column: span 2;">
+              <span>☁️</span> 霊脈星雲ヴェール
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Bar -->
+    <footer class="footer-bar interactive">
+      <div class="ambient-tip">
+        <span class="key-badge">F</span> または <span class="key-badge">Space</span> でHUD非表示（環境映像モード）
+      </div>
+      <div class="ambient-tip">
+        <span>AETHERIA OBSERVATORY SYSTEM v1.0.0</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Ambient Mode Restore Floating Hint -->
+  <button id="ambient-restore-hint">
+    ✦ クリックまたは [F] でHUD復帰
+  </button>
+
+  <!-- City Search Modal -->
+  <div class="modal-overlay" id="city-modal-overlay">
+    <div class="glass-panel city-modal">
+      <div class="card-header">
+        <span class="card-title">観測都市の同期</span>
+        <span class="card-tag">GLOBAL STATIONS</span>
+      </div>
+
+      <div class="search-input-wrapper">
+        <input type="text" class="search-input" id="city-search-input" placeholder="都市名を検索 (例: Paris, 札幌, Sydney)...">
+      </div>
+
+      <div id="search-results"></div>
+
+      <div>
+        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">主要観測所プリセット</span>
+        <div class="preset-cities-grid" id="preset-cities" style="margin-top: 8px;">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
