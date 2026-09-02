@@ -1,5 +1,5 @@
 /* ==========================================================================
-   『並行世界の気象台』 Design System & Stylesheet (Exoplanet Suite)
+   『並行世界の気象台』 Design System & Stylesheet (Exoplanet Suite v4.5)
    Theme: Celestial Ether / Astral Glassmorphism
    ========================================================================== */
 
@@ -203,22 +203,6 @@ body.ambient-mode #ambient-restore-hint {
   gap: 10px;
 }
 
-.warp-btn {
-  background: rgba(168, 85, 247, 0.15);
-  border-color: rgba(168, 85, 247, 0.4);
-  color: #c084fc;
-  position: relative;
-  overflow: hidden;
-}
-
-.warp-btn:hover {
-  background: rgba(168, 85, 247, 0.3);
-  border-color: var(--accent-violet);
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
-  color: #fff;
-  transform: rotate(15deg) scale(1.08);
-}
-
 .city-select-wrapper {
   position: relative;
   display: flex;
@@ -237,13 +221,37 @@ body.ambient-mode #ambient-restore-hint {
   font-family: var(--font-sans);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .city-select-btn:hover {
   border-color: var(--accent-cyan);
   background: var(--bg-glass-card-hover);
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+}
+
+/* Stationary Random Warp Button (No jumping/rotation on click) */
+.warp-btn {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  transform: none !important;
+}
+
+.warp-btn:hover {
+  background: rgba(168, 85, 247, 0.35);
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+  color: #fff;
+  transform: none !important;
+}
+
+.warp-btn:active, .warp-btn.active {
+  background: rgba(168, 85, 247, 0.55);
+  border-color: #e9d5ff;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.7);
+  transform: none !important;
 }
 
 .status-dot {
@@ -271,14 +279,13 @@ body.ambient-mode #ambient-restore-hint {
   border: 1px solid var(--border-glass);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .action-btn:hover {
   color: var(--accent-cyan);
   border-color: var(--accent-cyan);
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-  transform: translateY(-1px);
 }
 
 .action-btn.active {

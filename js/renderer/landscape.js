@@ -1,15 +1,5 @@
 /**
- * LandscapeRenderer - 10 Modular Procedural Planet Biomes
- * 1. MEGALOPOLIS (星間摩天楼・空中都市)
- * 2. PLAINS (霊光草原・巨大霊樹)
- * 3. COAST (結晶海岸・波光)
- * 4. ARCHIPELAGO (浮遊列島・天球神殿)
- * 5. GLACIER (極氷晶界・氷尖塔)
- * 6. VOLCANO_PLASMA (星核溶岩・発光クレーター・エーテル噴煙)
- * 7. CRYSTAL_FOREST (巨晶の森・クォーツ尖峰群)
- * 8. DESERT_RUINS (星屑砂漠・古代環状遺跡)
- * 9. DEEP_ABYSS_REEF (深淵発光サンゴ礁)
- * 10. SOLAR_SPIRE (太陽受光塔・集光アレイ)
+ * LandscapeRenderer - 16 Modular Procedural Planet Biomes
  */
 
 export const BIOME_TYPES = {
@@ -22,7 +12,13 @@ export const BIOME_TYPES = {
   CRYSTAL_FOREST: 'CRYSTAL_FOREST',
   DESERT_RUINS: 'DESERT_RUINS',
   DEEP_ABYSS_REEF: 'DEEP_ABYSS_REEF',
-  SOLAR_SPIRE: 'SOLAR_SPIRE'
+  SOLAR_SPIRE: 'SOLAR_SPIRE',
+  NEBULA_CANYON: 'NEBULA_CANYON',
+  MUSHROOM_GROVE: 'MUSHROOM_GROVE',
+  ETHEREAL_SWAMP: 'ETHEREAL_SWAMP',
+  FLOATING_CITADEL: 'FLOATING_CITADEL',
+  LAVA_OCEAN: 'LAVA_OCEAN',
+  AURORA_TUNDRA: 'AURORA_TUNDRA'
 };
 
 export class LandscapeRenderer {
@@ -37,6 +33,11 @@ export class LandscapeRenderer {
     this.ruins = [];
     this.volcanoes = [];
     this.spires = [];
+    this.mushrooms = [];
+    this.canyons = [];
+    this.swamps = [];
+    this.citadels = [];
+    this.tundras = [];
   }
 
   setBiome(biomeType, seed = Math.random() * 10000) {
@@ -83,7 +84,7 @@ export class LandscapeRenderer {
         { relX: 0.72, size: 1.0, glowPhase: rng() * Math.PI },
         { relX: 0.24, size: 0.6, glowPhase: rng() * Math.PI }
       ];
-    } else if (this.currentBiome === BIOME_TYPES.COAST) {
+    } else if (this.currentBiome === BIOME_TYPES.COAST || this.currentBiome === BIOME_TYPES.LAVA_OCEAN) {
       this.waves = [];
       for (let i = 0; i < 5; i++) {
         this.waves.push({
@@ -96,10 +97,10 @@ export class LandscapeRenderer {
       }
     } else if (this.currentBiome === BIOME_TYPES.ARCHIPELAGO) {
       this.islands = [
-        { baseRelX: 0.22, baseRelY: 0.62, width: 280, height: 110, phase: 0.0, speed: 0.8, monolith: true },
-        { baseRelX: 0.68, baseRelY: 0.52, width: 340, height: 130, phase: 1.8, speed: 0.6, monolith: true },
-        { baseRelX: 0.88, baseRelY: 0.72, width: 200, height: 85,  phase: 3.4, speed: 1.1, monolith: false },
-        { baseRelX: 0.08, baseRelY: 0.44, width: 180, height: 75,  phase: 4.8, speed: 0.9, monolith: false }
+        { baseRelX: 0.22, baseRelY: 0.62, width: 280, height: 110, phase: 0.0, speed: 0.8 },
+        { baseRelX: 0.68, baseRelY: 0.52, width: 340, height: 130, phase: 1.8, speed: 0.6 },
+        { baseRelX: 0.88, baseRelY: 0.72, width: 200, height: 85,  phase: 3.4, speed: 1.1 },
+        { baseRelX: 0.08, baseRelY: 0.44, width: 180, height: 75,  phase: 4.8, speed: 0.9 }
       ];
     } else if (this.currentBiome === BIOME_TYPES.GLACIER) {
       this.glaciers = [];
@@ -119,10 +120,9 @@ export class LandscapeRenderer {
       ];
     } else if (this.currentBiome === BIOME_TYPES.CRYSTAL_FOREST) {
       this.crystals = [];
-      const cCount = 28;
-      for (let i = 0; i < cCount; i++) {
+      for (let i = 0; i < 28; i++) {
         this.crystals.push({
-          relX: (i / cCount) + (rng() - 0.5) * 0.03,
+          relX: (i / 28) + (rng() - 0.5) * 0.03,
           height: 80 + rng() * 180,
           width: 20 + rng() * 35,
           color: i % 2 === 0 ? '#00f0ff' : '#c084fc',
@@ -155,6 +155,45 @@ export class LandscapeRenderer {
         { relX: 0.22, heightRatio: 0.45, main: false },
         { relX: 0.78, heightRatio: 0.48, main: false }
       ];
+    } else if (this.currentBiome === BIOME_TYPES.MUSHROOM_GROVE) {
+      this.mushrooms = [];
+      for (let i = 0; i < 16; i++) {
+        this.mushrooms.push({
+          relX: (i / 16) + (rng() - 0.5) * 0.04,
+          stemH: 70 + rng() * 130,
+          capW: 40 + rng() * 70,
+          color: i % 2 === 0 ? '#38bdf8' : '#e879f9'
+        });
+      }
+    } else if (this.currentBiome === BIOME_TYPES.NEBULA_CANYON) {
+      this.canyons = [
+        { side: 'left', widthRatio: 0.45, slope: 0.8 },
+        { side: 'right', widthRatio: 0.45, slope: 0.8 }
+      ];
+    } else if (this.currentBiome === BIOME_TYPES.ETHEREAL_SWAMP) {
+      this.swamps = [];
+      for (let i = 0; i < 14; i++) {
+        this.swamps.push({
+          relX: (i / 14) + (rng() - 0.5) * 0.05,
+          lilyRadius: 18 + rng() * 25,
+          glowAlpha: 0.5 + rng() * 0.5
+        });
+      }
+    } else if (this.currentBiome === BIOME_TYPES.FLOATING_CITADEL) {
+      this.citadels = [
+        { relX: 0.5, relY: 0.45, size: 140, rotSpeed: 0.0006 },
+        { relX: 0.25, relY: 0.62, size: 70, rotSpeed: -0.001 },
+        { relX: 0.75, relY: 0.58, size: 85, rotSpeed: 0.0008 }
+      ];
+    } else if (this.currentBiome === BIOME_TYPES.AURORA_TUNDRA) {
+      this.tundras = [];
+      for (let i = 0; i < 24; i++) {
+        this.tundras.push({
+          relX: (i / 24) + (rng() - 0.5) * 0.03,
+          height: 30 + rng() * 45,
+          color: i % 2 === 0 ? '#00ffb2' : '#7dd3fc'
+        });
+      }
     }
   }
 
@@ -196,6 +235,24 @@ export class LandscapeRenderer {
         break;
       case BIOME_TYPES.SOLAR_SPIRE:
         this.renderSolarSpire(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.MUSHROOM_GROVE:
+        this.renderMushroomGrove(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.NEBULA_CANYON:
+        this.renderNebulaCanyon(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.ETHEREAL_SWAMP:
+        this.renderEtherealSwamp(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.FLOATING_CITADEL:
+        this.renderFloatingCitadel(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.LAVA_OCEAN:
+        this.renderLavaOcean(ctx, width, height, time, windSpeed, accentColor);
+        break;
+      case BIOME_TYPES.AURORA_TUNDRA:
+        this.renderAuroraTundra(ctx, width, height, time, windSpeed, accentColor);
         break;
       case BIOME_TYPES.ARCHIPELAGO:
       default:
@@ -306,7 +363,6 @@ export class LandscapeRenderer {
   // --- 3. COAST ---
   renderCoast(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
-    const shoreY = height * 0.76;
     for (const w of this.waves) {
       const wy = w.baseYRel * height;
       ctx.fillStyle = 'rgba(2, 12, 28, 0.45)';
@@ -369,7 +425,7 @@ export class LandscapeRenderer {
     ctx.restore();
   }
 
-  // --- 6. VOLCANO & PLASMA CALDERA (星核溶岩・発光クレーター) ---
+  // --- 6. VOLCANO & PLASMA CALDERA ---
   renderVolcanoPlasma(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
     const groundY = height * 0.92;
@@ -378,7 +434,6 @@ export class LandscapeRenderer {
       const vh = v.heightRatio * height;
       const vy = groundY - vh;
 
-      // Volcano Mountain Body
       ctx.fillStyle = '#180a0a';
       ctx.beginPath();
       ctx.moveTo(vx - v.width * 0.5, groundY);
@@ -388,7 +443,6 @@ export class LandscapeRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Pulsing Glowing Caldera Plasma Core
       const glow = 0.6 + 0.4 * Math.sin(time * 0.003 + vx);
       const magmaGrad = ctx.createRadialGradient(vx, vy, 4, vx, vy - 20, v.craterWidth * 1.5);
       magmaGrad.addColorStop(0, '#fff');
@@ -403,7 +457,7 @@ export class LandscapeRenderer {
     ctx.restore();
   }
 
-  // --- 7. CRYSTAL FOREST (巨晶の森) ---
+  // --- 7. CRYSTAL FOREST ---
   renderCrystalForest(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
     const groundY = height * 0.92;
@@ -422,7 +476,6 @@ export class LandscapeRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Glowing Facet Edge
       ctx.strokeStyle = c.color;
       ctx.lineWidth = 1.6;
       ctx.shadowColor = c.color;
@@ -438,11 +491,10 @@ export class LandscapeRenderer {
     ctx.restore();
   }
 
-  // --- 8. DESERT RUINS (星屑砂漠 & 古代環状遺跡) ---
+  // --- 8. DESERT RUINS ---
   renderDesertRuins(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
     const groundY = height * 0.88;
-    // Dune curves
     ctx.fillStyle = 'rgba(28, 18, 10, 0.9)';
     ctx.beginPath();
     ctx.moveTo(0, groundY);
@@ -454,7 +506,6 @@ export class LandscapeRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // Ancient Obelisks & Rings
     for (const r of this.ruins) {
       const rx = r.relX * width;
       const ry = groundY - 10;
@@ -475,7 +526,7 @@ export class LandscapeRenderer {
     ctx.restore();
   }
 
-  // --- 9. DEEP ABYSS REEF (深淵発光サンゴ礁) ---
+  // --- 9. DEEP ABYSS REEF ---
   renderDeepAbyssReef(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
     const groundY = height * 0.9;
@@ -498,7 +549,7 @@ export class LandscapeRenderer {
     ctx.restore();
   }
 
-  // --- 10. SOLAR SPIRE (太陽受光塔) ---
+  // --- 10. SOLAR SPIRE ---
   renderSolarSpire(ctx, width, height, time, windSpeed, accentColor) {
     ctx.save();
     const groundY = height * 0.94;
@@ -507,7 +558,6 @@ export class LandscapeRenderer {
       const sh = s.heightRatio * height;
       const sy = groundY - sh;
 
-      // Tower Core
       ctx.fillStyle = '#050a14';
       ctx.beginPath();
       ctx.moveTo(sx - 18, groundY);
@@ -517,7 +567,6 @@ export class LandscapeRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Top Radiant Lens Core
       const pulse = 0.5 + 0.5 * Math.sin(time * 0.004 + sx);
       ctx.fillStyle = '#fff';
       ctx.shadowColor = '#00f0ff';
@@ -525,6 +574,161 @@ export class LandscapeRenderer {
       ctx.beginPath();
       ctx.arc(sx, sy, s.main ? 10 * pulse : 6, 0, Math.PI * 2);
       ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // --- 11. MUSHROOM GROVE (巨大発光茸の森) ---
+  renderMushroomGrove(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    const groundY = height * 0.9;
+    ctx.fillStyle = 'rgba(6, 15, 25, 0.9)';
+    ctx.fillRect(0, groundY, width, height - groundY);
+
+    for (const m of this.mushrooms) {
+      const mx = m.relX * width;
+      const my = groundY;
+      const stemH = m.stemH;
+      const capW = m.capW;
+
+      // Stem
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(mx, my);
+      ctx.lineTo(mx, my - stemH);
+      ctx.stroke();
+
+      // Glowing Cap
+      const pulse = 0.8 + 0.2 * Math.sin(time * 0.002 + mx);
+      ctx.fillStyle = m.color;
+      ctx.shadowColor = m.color;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.ellipse(mx, my - stemH, capW * 0.5 * pulse, capW * 0.3 * pulse, 0, Math.PI, 0);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // --- 12. NEBULA CANYON (星雲大峡谷) ---
+  renderNebulaCanyon(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    // Left & Right towering sheer cliffs
+    ctx.fillStyle = '#080d1a';
+    ctx.beginPath();
+    ctx.moveTo(0, height * 0.3);
+    ctx.lineTo(width * 0.38, height * 0.95);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(width, height * 0.25);
+    ctx.lineTo(width * 0.62, height * 0.95);
+    ctx.lineTo(width, height);
+    ctx.closePath();
+    ctx.fill();
+
+    // Canyon Floor Glowing Leyline
+    const streamGrad = ctx.createLinearGradient(width * 0.4, height * 0.95, width * 0.6, height);
+    streamGrad.addColorStop(0, 'rgba(0, 240, 255, 0.8)');
+    streamGrad.addColorStop(1, 'rgba(168, 85, 247, 0.6)');
+    ctx.fillStyle = streamGrad;
+    ctx.fillRect(width * 0.38, height * 0.94, width * 0.24, height * 0.06);
+    ctx.restore();
+  }
+
+  // --- 13. ETHEREAL SWAMP (幽霊湿原・水鏡蓮華) ---
+  renderEtherealSwamp(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    const waterY = height * 0.82;
+    ctx.fillStyle = 'rgba(4, 20, 26, 0.9)';
+    ctx.fillRect(0, waterY, width, height - waterY);
+
+    for (const s of this.swamps) {
+      const sx = s.relX * width;
+      const sy = waterY + 20 + Math.sin(time * 0.001 + sx) * 6;
+      ctx.strokeStyle = 'rgba(0, 255, 178, 0.5)';
+      ctx.fillStyle = 'rgba(0, 255, 178, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, s.lilyRadius, s.lilyRadius * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // --- 14. FLOATING CITADEL (天空要塞・幾何学モノリス) ---
+  renderFloatingCitadel(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    for (const c of this.citadels) {
+      const cx = c.relX * width;
+      const cy = c.relY * height + Math.sin(time * 0.001 + cx) * 15;
+      const size = c.size;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(time * c.rotSpeed);
+
+      ctx.fillStyle = '#060a14';
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00f0ff';
+      ctx.shadowBlur = 12;
+
+      ctx.strokeRect(-size * 0.5, -size * 0.5, size, size);
+      ctx.fillRect(-size * 0.5, -size * 0.5, size, size);
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // --- 15. LAVA OCEAN (溶融プラズマ海) ---
+  renderLavaOcean(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    for (const w of this.waves) {
+      const wy = w.baseYRel * height;
+      const lavaGrad = ctx.createLinearGradient(0, wy, 0, height);
+      lavaGrad.addColorStop(0, '#f43f5e');
+      lavaGrad.addColorStop(0.4, '#ea580c');
+      lavaGrad.addColorStop(1, '#450a0a');
+
+      ctx.fillStyle = lavaGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      ctx.lineTo(0, wy);
+      for (let x = 0; x <= width; x += 30) {
+        ctx.lineTo(x, wy + Math.sin(x * w.freq + time * w.speed + w.phase) * w.amp);
+      }
+      ctx.lineTo(width, height);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // --- 16. AURORA TUNDRA (極光ツンドラ) ---
+  renderAuroraTundra(ctx, width, height, time, windSpeed, accentColor) {
+    ctx.save();
+    const groundY = height * 0.9;
+    ctx.fillStyle = '#05101a';
+    ctx.fillRect(0, groundY, width, height - groundY);
+
+    for (const t of this.tundras) {
+      const tx = t.relX * width;
+      const ty = groundY;
+      const glow = 0.5 + 0.5 * Math.sin(time * 0.003 + tx);
+      ctx.strokeStyle = t.color;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = t.color;
+      ctx.shadowBlur = 10 * glow;
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx + Math.sin(time * 0.002 + tx) * 8, ty - t.height);
+      ctx.stroke();
     }
     ctx.restore();
   }

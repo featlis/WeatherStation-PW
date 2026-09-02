@@ -1,6 +1,6 @@
 /**
  * WeatherTransmutationConverter
- * Converts real Earth telemetry into Parallel Alien Planet specifications & logs
+ * Converts real Earth telemetry into Parallel Alien Planet specifications & logs (16 Biomes)
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -154,6 +154,18 @@ export class WeatherConverter {
       biomeLog = '深淵発光サンゴ礁の触手群体が脈動中。浮遊胞子放出。';
     } else if (biome === BIOME_TYPES.SOLAR_SPIRE) {
       biomeLog = '太陽受光塔のコアレンズが恒星エネルギーを集束中。';
+    } else if (biome === BIOME_TYPES.MUSHROOM_GROVE) {
+      biomeLog = '巨大発光茸の傘から生体蛍光胞子が雲海へ飛散中。';
+    } else if (biome === BIOME_TYPES.NEBULA_CANYON) {
+      biomeLog = '星雲峡谷の断崖に沿って高密度エーテル気流が吹き抜けています。';
+    } else if (biome === BIOME_TYPES.ETHEREAL_SWAMP) {
+      biomeLog = '幽霊湿原の水鏡に天球星図が鮮明に反射。微細なせせらぎ音を感知。';
+    } else if (biome === BIOME_TYPES.FLOATING_CITADEL) {
+      biomeLog = '天空要塞の幾何学モノリスが反重力回転。共鳴磁場安定。';
+    } else if (biome === BIOME_TYPES.LAVA_OCEAN) {
+      biomeLog = '溶融プラズマ海の紅蓮波が熱放射を放っています。';
+    } else if (biome === BIOME_TYPES.AURORA_TUNDRA) {
+      biomeLog = '極光ツンドラの発光苔原がオーロラ光線と完全同調。';
     }
 
     const ancientGlyphs = ['᚛ᚨᛊᛏᚱᚨ᚜', '⟡ ⟐ ⟡ ◈', '〈0xAE78: RESONANCE〉', '✧･ﾟ* STARDUST CYCLE *･ﾟ✧', '⎈ PLANET SYNC ⎈'];

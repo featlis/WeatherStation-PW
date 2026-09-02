@@ -1,23 +1,29 @@
-@V:7@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[TRUE_GLOBAL_WARP_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
+@V:8@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXOPLANET_16BIOMES_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
 §SPEC{CORE:"Real2AlienExoplanetObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo",FULL_GLOBAL_WARP:true}
 §SESSION_CACHE{MAP:"Map<lat_lon_2dp, {planetDesignation,gravity,atmosphere,biome,skyFeature,seed,biomeLabel}>"}
 §SAMPLER{LAT:[-80,80],LON:[-180,180],BIAS_LAND:0.65,REV_GEO:"BigDataCloud+GeographicMarineNamings"}
-§MATH_TX{
-  T2K:(T+273.15)*0.1,W2XI:W*0.42,P2MU:(1013.25-P)*3.2+500,H2D:min(100,floor(H*1.15)),
-  P2BUOY:(1013.25-P)*1.2,N_PART:60+floor(H*1.8),
-  COLOR_MAP:{T<0:[205,"#7dd3fc"],T<18:[225,"#00f0ff"],T<28:[260,"#a855f7"],T>=28:[330,"#f59e0b"]},
-  ISLAND_OSC:{bob:sin(t*0.001*s+p)*(12+W*0.2),sway:cos(t*0.0008*s+p)*(4+W*0.15)}
-}
-§COSMIC_SKY_FEATURES{
-  RINGS:{bands:4,tilt:-25deg,colors:["#00f0ff","#e0f2fe","#a855f7","#00ffb2"]},
-  GAS_GIANT:{r:68,bands:swirl,moon:true},
-  BINARY_SUNS:{gold:110px,violet_dwarf:75px},
-  PULSAR:{rot:0.003,beam_len:0.8w},
-  DEEP_NEBULA:{blend:"screen",glow:true}
-}
-§10_PLANETARY_BIOMES{
+§16_PLANETARY_BIOMES{
   1:MEGALOPOLIS,2:PLAINS,3:COAST,4:ARCHIPELAGO,5:GLACIER,
-  6:VOLCANO_PLASMA,7:CRYSTAL_FOREST,8:DESERT_RUINS,9:DEEP_ABYSS_REEF,10:SOLAR_SPIRE
+  6:VOLCANO_PLASMA,7:CRYSTAL_FOREST,8:DESERT_RUINS,9:DEEP_ABYSS_REEF,10:SOLAR_SPIRE,
+  11:NEBULA_CANYON,12:MUSHROOM_GROVE,13:ETHEREAL_SWAMP,14:FLOATING_CITADEL,15:LAVA_OCEAN,16:AURORA_TUNDRA
+}
+§BIOME_ACOUSTIC_MAP{
+  MEGALOPOLIS:[rain,high_wind,chimes],
+  PLAINS:[birds,grass,breeze,insects],
+  COAST:[ocean_surf,sea_breeze],
+  ARCHIPELAGO:[stream,floating_wind,chimes],
+  GLACIER:[crystal_bells,cold_wind],
+  VOLCANO_PLASMA:[desert_wind,crystal_bells],
+  CRYSTAL_FOREST:[crystal_bells,insects],
+  DESERT_RUINS:[desert_wind,night_insects],
+  DEEP_ABYSS_REEF:[water_stream,spore_chimes],
+  SOLAR_SPIRE:[desert_wind,high_wind],
+  NEBULA_CANYON:[canyon_wind,crystal_bells],
+  MUSHROOM_GROVE:[insects,water_stream],
+  ETHEREAL_SWAMP:[water_stream,grass,insects],
+  FLOATING_CITADEL:[high_wind,crystal_bells,chimes],
+  LAVA_OCEAN:[ocean_surf,thermal_wind],
+  AURORA_TUNDRA:[crystal_bells,grass,insects]
 }
 §DSP_10_ORGANIC_CHANNELS{
   NO_DRONE:true,

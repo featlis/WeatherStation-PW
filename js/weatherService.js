@@ -1,7 +1,6 @@
 /**
  * WeatherService - Unlimited Global Coordinate Random Planetary Warp
- * Queries any real coordinate on Earth (-85° to +85°, -180° to +180°) via Open-Meteo
- * + Reverse Geo-naming for oceans, continents, and cities
+ * 16 Planetary Biomes + Full Coordinates Sampler
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -17,7 +16,13 @@ export const BIOME_LABELS = {
   [BIOME_TYPES.CRYSTAL_FOREST]: '巨晶の森・クォーツ尖峰 (Crystal Forest)',
   [BIOME_TYPES.DESERT_RUINS]: '星屑砂漠・古代環状遺跡 (Desert Ruins)',
   [BIOME_TYPES.DEEP_ABYSS_REEF]: '深淵発光サンゴ礁 (Abyss Reef)',
-  [BIOME_TYPES.SOLAR_SPIRE]: '太陽受光塔・集光アレイ (Solar Spire)'
+  [BIOME_TYPES.SOLAR_SPIRE]: '太陽受光塔・集光アレイ (Solar Spire)',
+  [BIOME_TYPES.NEBULA_CANYON]: '星雲峡谷・大断崖 (Nebula Canyon)',
+  [BIOME_TYPES.MUSHROOM_GROVE]: '発光茸の森・胞子樹林 (Mushroom Grove)',
+  [BIOME_TYPES.ETHEREAL_SWAMP]: '幽霊沼沢・水鏡湿原 (Ethereal Swamp)',
+  [BIOME_TYPES.FLOATING_CITADEL]: '天空要塞・幾何学モノリス (Floating Citadel)',
+  [BIOME_TYPES.LAVA_OCEAN]: '溶融プラズマ海・紅蓮波 (Lava Ocean)',
+  [BIOME_TYPES.AURORA_TUNDRA]: '極光ツンドラ・発光苔原 (Aurora Tundra)'
 };
 
 export const PRESET_CITIES = [
@@ -37,36 +42,29 @@ export class WeatherService {
     this.sessionCityMap = new Map();
   }
 
-  /**
-   * Generates a completely random coordinate anywhere on Earth (-80° to +80°, -180° to +180°)
-   */
   async getRandomWorldLocation() {
-    // Bias 60% towards land/inhabited zones, 40% towards vast oceans/poles
     const isLandZone = Math.random() < 0.65;
     let lat, lon;
 
     if (isLandZone) {
-      // Sample major continental latitude & longitude bands
       const zones = [
-        { latMin: 25, latMax: 55, lonMin: 120, lonMax: 145 }, // East Asia / Japan
-        { latMin: 35, latMax: 68, lonMin: -10, lonMax: 35 },  // Europe
-        { latMin: 25, latMax: 50, lonMin: -125, lonMax: -70 },// North America
-        { latMin: -35, latMax: 10, lonMin: -75, lonMax: -35 },// South America
-        { latMin: -35, latMax: 35, lonMin: 10, lonMax: 45 },  // Africa
-        { latMin: -40, latMax: -12, lonMin: 115, lonMax: 150 },// Oceania
-        { latMin: 50, latMax: 75, lonMin: 60, lonMax: 170 }, // Siberia / Arctic
-        { latMin: -80, latMax: -65, lonMin: -180, lonMax: 180 }// Antarctica
+        { latMin: 25, latMax: 55, lonMin: 120, lonMax: 145 },
+        { latMin: 35, latMax: 68, lonMin: -10, lonMax: 35 },
+        { latMin: 25, latMax: 50, lonMin: -125, lonMax: -70 },
+        { latMin: -35, latMax: 10, lonMin: -75, lonMax: -35 },
+        { latMin: -35, latMax: 35, lonMin: 10, lonMax: 45 },
+        { latMin: -40, latMax: -12, lonMin: 115, lonMax: 150 },
+        { latMin: 50, latMax: 75, lonMin: 60, lonMax: 170 },
+        { latMin: -80, latMax: -65, lonMin: -180, lonMax: 180 }
       ];
       const z = zones[Math.floor(Math.random() * zones.length)];
       lat = +(z.latMin + Math.random() * (z.latMax - z.latMin)).toFixed(4);
       lon = +(z.lonMin + Math.random() * (z.lonMax - z.lonMin)).toFixed(4);
     } else {
-      // True global random coordinates (Oceans, Polar caps, Remote Islands)
       lat = +((Math.random() * 150) - 75).toFixed(4);
       lon = +((Math.random() * 360) - 180).toFixed(4);
     }
 
-    // Resolve Location Name via Reverse Geocode or Oceanic Region
     const localityName = await this.resolveCoordinateName(lat, lon);
     const planetName = `第${Math.abs(Math.floor(lat * 7 + lon * 3)) % 89 + 10}星系『${localityName.split(' ')[0]}』`;
 
@@ -78,9 +76,6 @@ export class WeatherService {
     };
   }
 
-  /**
-   * Reverse-geocodes coordinate into human/geographic region name
-   */
   async resolveCoordinateName(lat, lon) {
     const latStr = `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'}`;
     const lonStr = `${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
@@ -107,7 +102,6 @@ export class WeatherService {
       // Network timeout / fallback
     }
 
-    // Fallback: Geographic Marine / Regional Namings
     if (lat > 66.5) return `北極圏・極光界 [${latStr}, ${lonStr}]`;
     if (lat < -60.0) return `南極氷原・最果て観測点 [${latStr}, ${lonStr}]`;
     if (lon > 100 && lon < 180 && lat > -20 && lat < 50) return `西太平洋 観測海域 [${latStr}, ${lonStr}]`;
@@ -119,9 +113,6 @@ export class WeatherService {
     return `地球観測座標 [${latStr}, ${lonStr}]`;
   }
 
-  /**
-   * Deterministically assigns unique Planetary Identity per session
-   */
   getCitySessionInfo(lat, lon, cityName = '') {
     const key = `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`;
     if (!this.sessionCityMap.has(key)) {
@@ -151,9 +142,6 @@ export class WeatherService {
     return this.sessionCityMap.get(key);
   }
 
-  /**
-   * Fetch live weather data from Open-Meteo for ANY coordinate on Earth
-   */
   async fetchWeather(city = this.currentCity) {
     this.currentCity = city;
     const sessionInfo = this.getCitySessionInfo(city.lat, city.lon, city.name);

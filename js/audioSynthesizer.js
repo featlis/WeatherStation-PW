@@ -1,16 +1,6 @@
 /**
- * AudioSynthesizer - Rich Multi-Source Environmental Soundscape & Mixer
- * 100% Drone-Free, Clean Organic Sounds:
- * 1. Rain & Micro-Droplets (雨音・水滴)
- * 2. Celestial Birds (天球鳥のさえずり)
- * 3. Wind & Grass Rustle (風と草原)
- * 4. Ocean Surf & Waves (波のさざなみ)
- * 5. Astral Crickets / Night Insects (星光コオロギ・虫の鳴き声)
- * 6. Quartz Crystal Bell Shimmer (水晶共鳴ベル)
- * 7. Desert Glass Wind (星屑砂漠の乾いた風)
- * 8. Water Stream Brook (エーテル清流のせせらぎ)
- * 9. Pentatonic Landing Chimes (着地チャイム)
- * 10. Focus Solfeggio Bell (瞑想ベル)
+ * AudioSynthesizer - Biome-Specific Organic Soundscape Synthesizer (16 Biomes)
+ * 100% Drone-Free, Clean Organic Sounds tailored to each terrain & environment
  */
 
 import { BIOME_TYPES } from './renderer/landscape.js';
@@ -230,7 +220,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 3. ASTRAL CRICKETS / NIGHT INSECTS (星光コオロギ)
+  // 3. ASTRAL CRICKETS / NIGHT INSECTS
   // =========================================================================
   startInsectScheduler() {
     this.insectTimer = setInterval(() => {
@@ -250,7 +240,6 @@ export class AudioSynthesizer {
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(f, now);
 
-    // Fast micro-tremolo for insect chirr
     const tremolo = this.ctx.createOscillator();
     const tremoloGain = this.ctx.createGain();
     tremolo.frequency.setValueAtTime(18, now);
@@ -270,7 +259,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 4. QUARTZ CRYSTAL BELLS (巨晶の森共振)
+  // 4. QUARTZ CRYSTAL BELLS
   // =========================================================================
   startCrystalBellScheduler() {
     this.crystalBellTimer = setInterval(() => {
@@ -365,7 +354,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 7. DESERT SAND WIND (乾いた星屑砂漠の風)
+  // 7. DESERT SAND WIND
   // =========================================================================
   initDesertWindLayer() {
     const noiseBuffer = this.createNoiseBuffer();
@@ -384,7 +373,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // 8. WATER STREAM (エーテル清流のせせらぎ水音)
+  // 8. WATER STREAM
   // =========================================================================
   initWaterStreamLayer() {
     const noiseBuffer = this.createNoiseBuffer();
@@ -476,7 +465,7 @@ export class AudioSynthesizer {
   }
 
   // =========================================================================
-  // DYNAMIC CROSS-FADER
+  // DYNAMIC CROSS-FADER TAILORED TO 16 BIOMES
   // =========================================================================
   updateEnvironment(state) {
     this.lastEnvironmentState = state;
@@ -488,44 +477,44 @@ export class AudioSynthesizer {
     const isRaining = weatherType === PHENOMENON_TYPES.RAIN || weatherType === PHENOMENON_TYPES.THUNDER;
     const isClear = weatherType === PHENOMENON_TYPES.CLEAR || weatherType === PHENOMENON_TYPES.CLOUDS;
 
-    // 1. Rain
+    // 1. Rain Layer
     const rainVol = (isRaining ? (0.28 + (humidity / 100) * 0.15) : 0.0001) * this.layerMix.rain;
     this.gains.rain.gain.setTargetAtTime(rainVol, t, ramp);
 
-    // 2. Birds (Active in plains, archipelago, coast, megalopolis during clear weather)
-    const birdActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.COAST || biomeType === BIOME_TYPES.MEGALOPOLIS || biomeType === BIOME_TYPES.SOLAR_SPIRE);
+    // 2. Birds: Active only in Plains, Archipelago, Coast during clear weather
+    const birdActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.COAST);
     const birdVol = (birdActive ? 0.65 : 0.0001) * this.layerMix.birds;
     this.gains.birds.gain.setTargetAtTime(birdVol, t, ramp);
 
-    // 3. Insects (Active in plains, crystal forest, desert ruins, deep abyss reef)
-    const insectActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.DEEP_ABYSS_REEF);
+    // 3. Insects: Active in Plains, Crystal Forest, Desert Ruins, Mushroom Grove, Ethereal Swamp, Aurora Tundra
+    const insectActive = isClear && (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.MUSHROOM_GROVE || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.AURORA_TUNDRA);
     const insectVol = (insectActive ? 0.45 : 0.0001) * this.layerMix.insects;
     this.gains.insects.gain.setTargetAtTime(insectVol, t, ramp);
 
-    // 4. Crystal Bells (Active in crystal forest & glacier)
-    const crystalActive = (biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.GLACIER || biomeType === BIOME_TYPES.VOLCANO_PLASMA);
+    // 4. Crystal Bells: Active in Glacier, Crystal Forest, Volcano Plasma, Floating Citadel, Nebula Canyon
+    const crystalActive = (biomeType === BIOME_TYPES.CRYSTAL_FOREST || biomeType === BIOME_TYPES.GLACIER || biomeType === BIOME_TYPES.VOLCANO_PLASMA || biomeType === BIOME_TYPES.FLOATING_CITADEL || biomeType === BIOME_TYPES.NEBULA_CANYON);
     const crystalVol = (crystalActive ? 0.55 : 0.0001) * this.layerMix.crystal_bells;
     this.gains.crystal_bells.gain.setTargetAtTime(crystalVol, t, ramp);
 
-    // 5. Desert Wind (Active in desert ruins & solar spire)
-    const desertActive = (biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.SOLAR_SPIRE);
+    // 5. Desert Wind: Active in Desert Ruins, Solar Spire, Volcano Plasma
+    const desertActive = (biomeType === BIOME_TYPES.DESERT_RUINS || biomeType === BIOME_TYPES.SOLAR_SPIRE || biomeType === BIOME_TYPES.VOLCANO_PLASMA);
     const desertVol = (desertActive ? (0.2 + (windSpeed / 30) * 0.25) : 0.0001) * this.layerMix.desert_wind;
     this.gains.desert_wind.gain.setTargetAtTime(desertVol, t, ramp);
 
-    // 6. Water Stream (Active in archipelago & deep abyss reef)
-    const streamActive = (biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.DEEP_ABYSS_REEF);
+    // 6. Water Stream: Active in Archipelago, Deep Abyss Reef, Ethereal Swamp, Mushroom Grove
+    const streamActive = (biomeType === BIOME_TYPES.ARCHIPELAGO || biomeType === BIOME_TYPES.DEEP_ABYSS_REEF || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.MUSHROOM_GROVE);
     const streamVol = (streamActive ? 0.35 : 0.0001) * this.layerMix.water_stream;
     this.gains.water_stream.gain.setTargetAtTime(streamVol, t, ramp);
 
-    // 7. Grass Rustle
-    const grassActive = biomeType === BIOME_TYPES.PLAINS ? (0.25 + (windSpeed / 40) * 0.25) : 0.0001;
+    // 7. Grass Rustle: Active in Plains, Ethereal Swamp, Aurora Tundra
+    const grassActive = (biomeType === BIOME_TYPES.PLAINS || biomeType === BIOME_TYPES.ETHEREAL_SWAMP || biomeType === BIOME_TYPES.AURORA_TUNDRA) ? (0.25 + (windSpeed / 40) * 0.25) : 0.0001;
     this.gains.grass.gain.setTargetAtTime(grassActive * this.layerMix.grass, t, ramp);
 
-    // 8. Ocean Surf
-    const oceanActive = biomeType === BIOME_TYPES.COAST ? 0.45 : 0.0001;
+    // 8. Ocean Surf: Active in Coast & Lava Ocean
+    const oceanActive = (biomeType === BIOME_TYPES.COAST || biomeType === BIOME_TYPES.LAVA_OCEAN) ? 0.45 : 0.0001;
     this.gains.ocean.gain.setTargetAtTime(oceanActive * this.layerMix.ocean, t, ramp);
 
-    // 9. Base Wind
+    // 9. Base Ambient Wind: Present in all open atmospheric landscapes
     const windVol = (0.08 + (windSpeed / 40) * 0.2) * this.layerMix.wind;
     this.gains.wind.gain.setTargetAtTime(windVol, t, ramp);
     if (this.windFilter) {
