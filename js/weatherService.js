@@ -155,6 +155,8 @@ export class WeatherService {
       const current = data.current;
       return {
         city: city.name,
+        rawLatitude: city.lat,
+        rawLongitude: city.lon,
         parallelCity: city.basePlanet || `第${Math.abs(Math.floor(city.lat * 5)) % 89 + 10}星系『${city.name.split(' ')[0]}』`,
         planetDesignation: sessionInfo.planetDesignation,
         gravity: sessionInfo.gravity,

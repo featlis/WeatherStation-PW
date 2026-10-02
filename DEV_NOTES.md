@@ -1,4 +1,4 @@
-@V:8@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXOPLANET_16BIOMES_COMPLETE,PY_WINDOWS_NATIVE_PENDING]
+@V:9@CTX:WeatherStation-PW@BRANCH:feature/rich-ambient-enhancements@TGT:[EXOPLANET_V5_OVERHAUL_COMPLETE,HIGH_FIDELITY_16BIOMES_VERIFIED]
 §SPEC{CORE:"Real2AlienExoplanetObservatory",MODE:"AmbientFocus",FPS:60,API:"Open-Meteo",FULL_GLOBAL_WARP:true}
 §SESSION_CACHE{MAP:"Map<lat_lon_2dp, {planetDesignation,gravity,atmosphere,biome,skyFeature,seed,biomeLabel}>"}
 §SAMPLER{LAT:[-80,80],LON:[-180,180],BIAS_LAND:0.65,REV_GEO:"BigDataCloud+GeographicMarineNamings"}

@@ -1,10 +1,10 @@
 /**
  * CreaturesAndAnomaliesRenderer
  * Renders celestial wildlife, skycraft, meteor showers, and gravity ripples:
- * 1. Astral Leviathan / Star Whale (星鯨 / エーテルマンタ)
- * 2. Ether Skiffs / Sky Pods (空中飛行艇)
- * 3. Sporadic Meteors & Shooting Stars (流星雨)
- * 4. Interactive Gravity Shockwave Ripples (重力波クリック)
+ * 1. Astral Leviathan / Star Whale (Segmented swimming spine, celestial wings, stardust wake)
+ * 2. Ether Skiffs / Sky Pods (Aerodynamic exploratory vessels with ion particle plumes)
+ * 3. Meteors & Bolides (Incandescent atmospheric streaks with burst sparks)
+ * 4. Interactive Gravity Shockwave Ripples (Multi-ring chromatic dispersion)
  */
 
 export class CreaturesAndAnomaliesRenderer {
@@ -21,8 +21,8 @@ export class CreaturesAndAnomaliesRenderer {
 
   initSkiffs() {
     this.skiffs = [
-      { x: -100, yRel: 0.32, speed: 0.65, size: 14, color: '#00f0ff', trail: [] },
-      { x: -300, yRel: 0.48, speed: 0.45, size: 10, color: '#f43f5e', trail: [] }
+      { x: -120, yRel: 0.32, speed: 0.75, size: 16, color: '#00f0ff', trail: [] },
+      { x: -340, yRel: 0.46, speed: 0.52, size: 12, color: '#f43f5e', trail: [] }
     ];
   }
 
@@ -31,54 +31,88 @@ export class CreaturesAndAnomaliesRenderer {
       x,
       y,
       radius: 4,
-      maxRadius: 180,
-      alpha: 0.95
+      maxRadius: 240,
+      alpha: 1.0,
+      rings: [0, -15, -30]
     });
   }
 
-  render(ctx, width, height, time, params) {
+  render(ctx, width, height, time, params, px = 0, py = 0) {
     const { windSpeed, isDay } = params;
 
-    // 1. Meteors (Active in night & windy conditions)
+    // 1. Meteors (Active in night & twilight)
     this.renderMeteors(ctx, width, height, time, windSpeed, isDay);
 
     // 2. Astral Leviathan / Star Whale
-    this.renderLeviathan(ctx, width, height, time, params);
+    this.renderLeviathan(ctx, width, height, time, params, px, py);
 
     // 3. Ether Skiffs / Sky Pods
     this.renderSkiffs(ctx, width, height, time);
 
-    // 4. Gravity Shockwave Ripples
+    // 4. Interactive Gravity Shockwave Ripples
     this.renderGravityRipples(ctx);
   }
 
   // =========================================================================
-  // 1. ASTRAL LEVIATHAN (星空を遊泳する巨大星鯨)
+  // 1. ASTRAL LEVIATHAN (星空を遊泳する星鯨・エーテルマンタ)
   // =========================================================================
-  renderLeviathan(ctx, width, height, time, params) {
-    // Spawn leviathan every 25-45 seconds or on initial load
-    if (!this.leviathan && time - this.lastLeviathanSpawn > 22000) {
-      if (Math.random() < 0.6 || this.lastLeviathanSpawn === 0) {
-        this.lastLeviathanSpawn = time;
-        const fromLeft = Math.random() > 0.5;
-        this.leviathan = {
-          x: fromLeft ? -220 : width + 220,
-          y: height * (0.15 + Math.random() * 0.35),
-          vx: fromLeft ? (0.4 + Math.random() * 0.3) : -(0.4 + Math.random() * 0.3),
-          length: 160 + Math.random() * 80,
-          phase: Math.random() * Math.PI * 2,
-          spores: []
-        };
-      }
+  renderLeviathan(ctx, width, height, time, params, px = 0, py = 0) {
+    if (!this.leviathan && time - this.lastLeviathanSpawn > 18000) {
+      this.lastLeviathanSpawn = time;
+      const fromLeft = Math.random() > 0.5;
+      this.leviathan = {
+        x: fromLeft ? -260 : width + 260,
+        y: height * (0.16 + Math.random() * 0.32),
+        vx: fromLeft ? (0.45 + Math.random() * 0.3) : -(0.45 + Math.random() * 0.3),
+        length: 220 + Math.random() * 90,
+        phase: Math.random() * Math.PI * 2,
+        wakeParticles: []
+      };
     }
 
     if (!this.leviathan) return;
-
     const lev = this.leviathan;
     lev.x += lev.vx;
 
-    // Remove when out of screen
-    if ((lev.vx > 0 && lev.x > width + 300) || (lev.vx < 0 && lev.x < -300)) {
+    // Wake particle emission
+    if (Math.random() < 0.65) {
+      lev.wakeParticles.push({
+        x: lev.vx > 0 ? lev.x - lev.length * 0.5 : lev.x + lev.length * 0.5,
+        y: lev.y + (Math.random() - 0.5) * 16,
+        vx: -lev.vx * 0.25 + (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.3,
+        alpha: 0.9,
+        size: Math.random() * 2.8 + 1.2,
+        color: Math.random() > 0.5 ? '#00f0ff' : '#e879f9'
+      });
+    }
+
+    // Update wake particles
+    for (let i = lev.wakeParticles.length - 1; i >= 0; i--) {
+      const p = lev.wakeParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.007;
+      if (p.alpha <= 0) {
+        lev.wakeParticles.splice(i, 1);
+      }
+    }
+
+    // Render Wake Particles
+    ctx.save();
+    for (const p of lev.wakeParticles) {
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Check exit
+    if ((lev.vx > 0 && lev.x > width + 350) || (lev.vx < 0 && lev.x < -350)) {
       this.leviathan = null;
       return;
     }
@@ -87,220 +121,228 @@ export class CreaturesAndAnomaliesRenderer {
     ctx.translate(lev.x, lev.y);
     if (lev.vx < 0) ctx.scale(-1, 1);
 
-    const swimWave = Math.sin(time * 0.0018 + lev.phase);
     const L = lev.length;
+    const wave = Math.sin(time * 0.0018 + lev.phase);
 
-    // Leviathan Body (Graceful tapered whale/manta silhouette)
+    // Segmented Spine Curve
     ctx.beginPath();
-    ctx.moveTo(L * 0.5, 0); // Head snout
-    ctx.quadraticCurveTo(L * 0.2, -L * 0.16 + swimWave * 4, -L * 0.2, -L * 0.1); // Upper back
-    ctx.quadraticCurveTo(-L * 0.45, -L * 0.05 + swimWave * 8, -L * 0.5, swimWave * 12); // Tail base
-    ctx.quadraticCurveTo(-L * 0.45, L * 0.05 + swimWave * 8, -L * 0.2, L * 0.1); // Belly
-    ctx.quadraticCurveTo(L * 0.2, L * 0.16 + swimWave * 4, L * 0.5, 0); // Chin
+    ctx.moveTo(L * 0.48, 0); // Snout
+    ctx.quadraticCurveTo(L * 0.2, -L * 0.16 + wave * 4, -L * 0.1, -L * 0.11 + wave * 6);
+    ctx.quadraticCurveTo(-L * 0.35, -L * 0.05 + wave * 10, -L * 0.5, wave * 14); // Tail
+    ctx.quadraticCurveTo(-L * 0.35, L * 0.05 + wave * 10, -L * 0.1, L * 0.11 + wave * 6);
+    ctx.quadraticCurveTo(L * 0.2, L * 0.16 + wave * 4, L * 0.48, 0);
     ctx.closePath();
 
-    // Bioluminescent ethereal gradient
+    // Bioluminescent Body Gradient
     const levGrad = ctx.createLinearGradient(-L * 0.5, 0, L * 0.5, 0);
-    levGrad.addColorStop(0, 'rgba(168, 85, 247, 0.15)');
-    levGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.4)');
-    levGrad.addColorStop(1, 'rgba(235, 248, 255, 0.7)');
-
+    levGrad.addColorStop(0, 'rgba(168, 85, 247, 0.2)');
+    levGrad.addColorStop(0.45, 'rgba(0, 240, 255, 0.45)');
+    levGrad.addColorStop(0.85, 'rgba(240, 249, 255, 0.85)');
     ctx.fillStyle = levGrad;
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 18;
     ctx.fill();
+    ctx.shadowBlur = 0;
 
-    // Glowing edge spine
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.lineWidth = 1.5;
+    // Glowing Spine Contour
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.lineWidth = 1.6;
     ctx.stroke();
 
-    // Pectoral Fin (Swinging fin)
-    const finAngle = Math.sin(time * 0.002) * 0.35;
+    // Undulating Pectoral Wings / Fins (3D-like flutter)
+    const finFlap = Math.sin(time * 0.0022) * 0.4;
     ctx.save();
-    ctx.translate(L * 0.1, 0);
-    ctx.rotate(finAngle);
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
+    ctx.translate(L * 0.12, 0);
+    ctx.rotate(finFlap);
+
+    // Top Wing
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(-L * 0.15, L * 0.28, -L * 0.3, L * 0.35);
-    ctx.quadraticCurveTo(-L * 0.15, L * 0.15, 0, 0);
+    ctx.quadraticCurveTo(-L * 0.15, -L * 0.32, -L * 0.32, -L * 0.42);
+    ctx.quadraticCurveTo(-L * 0.18, -L * 0.16, 0, 0);
+    ctx.fill();
+
+    // Bottom Wing
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-L * 0.15, L * 0.32, -L * 0.32, L * 0.42);
+    ctx.quadraticCurveTo(-L * 0.18, L * 0.16, 0, 0);
     ctx.fill();
     ctx.restore();
 
     // Tail Fluke
     ctx.save();
-    ctx.translate(-L * 0.5, swimWave * 12);
-    ctx.rotate(swimWave * 0.2);
-    ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
+    ctx.translate(-L * 0.5, wave * 14);
+    ctx.rotate(wave * 0.22);
+    ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(-20, -25, -35, -30);
-    ctx.quadraticCurveTo(-15, 0, 0, 0);
-    ctx.quadraticCurveTo(-15, 0, -35, 30);
-    ctx.quadraticCurveTo(-20, 25, 0, 0);
+    ctx.quadraticCurveTo(-25, -30, -42, -35);
+    ctx.quadraticCurveTo(-20, 0, 0, 0);
+    ctx.quadraticCurveTo(-20, 0, -42, 35);
+    ctx.quadraticCurveTo(-25, 30, 0, 0);
     ctx.fill();
     ctx.restore();
 
-    // Constellation spots on whale belly
-    ctx.fillStyle = '#fff';
-    for (let i = 0; i < 6; i++) {
-      const sx = -L * 0.3 + i * (L * 0.12);
-      const sy = Math.sin(i * 1.5 + time * 0.002) * (L * 0.06);
+    // Belly Constellation Points
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 6;
+    for (let i = 0; i < 7; i++) {
+      const bx = -L * 0.32 + i * (L * 0.11);
+      const by = Math.sin(i * 1.4 + time * 0.002) * (L * 0.05);
       ctx.beginPath();
-      ctx.arc(sx, sy, 1.4, 0, Math.PI * 2);
+      ctx.arc(bx, by, 2.0, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    ctx.restore();
-
-    // Spawn trailing stardust spores behind whale
-    if (Math.random() < 0.4) {
-      lev.spores.push({
-        x: lev.x - (lev.vx > 0 ? lev.length * 0.45 : -lev.length * 0.45),
-        y: lev.y + swimWave * 10 + (Math.random() - 0.5) * 20,
-        alpha: 0.8,
-        size: Math.random() * 2.2 + 0.8
-      });
-    }
-
-    // Render spores
-    ctx.save();
-    for (let i = lev.spores.length - 1; i >= 0; i--) {
-      const sp = lev.spores[i];
-      sp.alpha -= 0.012;
-      sp.y += 0.2;
-      ctx.fillStyle = `rgba(0, 240, 255, ${sp.alpha})`;
-      ctx.shadowColor = '#00f0ff';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
-      ctx.fill();
-      if (sp.alpha <= 0) lev.spores.splice(i, 1);
-    }
     ctx.restore();
   }
 
   // =========================================================================
-  // 2. ETHER SKIFFS / SKY PODS (空中飛行艇)
+  // 2. ETHER SKIFFS / SKY PODS (空中探査艇)
   // =========================================================================
   renderSkiffs(ctx, width, height, time) {
     ctx.save();
-    for (const skiff of this.skiffs) {
-      skiff.x += skiff.speed;
-      const sy = height * skiff.yRel + Math.sin(time * 0.001 + skiff.x * 0.01) * 6;
+    for (const s of this.skiffs) {
+      s.x += s.speed;
+      if (s.x > width + 200) {
+        s.x = -200;
+        s.yRel = 0.25 + Math.random() * 0.35;
+      }
 
-      // Draw light trail
-      skiff.trail.push({ x: skiff.x, y: sy, alpha: 0.7 });
-      if (skiff.trail.length > 22) skiff.trail.shift();
+      const sy = s.yRel * height;
+
+      // Ion Particle Plume Trail
+      s.trail.push({ x: s.x, y: sy, alpha: 0.8 });
+      if (s.trail.length > 24) s.trail.shift();
+
+      for (let i = 0; i < s.trail.length; i++) {
+        const pt = s.trail[i];
+        const a = (i / s.trail.length) * 0.65;
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = a;
+        ctx.beginPath();
+        ctx.arc(pt.x - 12, pt.y, (i / s.trail.length) * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Sleek Vessel Body
+      ctx.globalAlpha = 1.0;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 8;
 
       ctx.beginPath();
-      for (let i = 0; i < skiff.trail.length; i++) {
-        const pt = skiff.trail[i];
-        const a = (i / skiff.trail.length) * 0.5;
-        ctx.strokeStyle = skiff.color === '#00f0ff' ? `rgba(0, 240, 255, ${a})` : `rgba(244, 63, 94, ${a})`;
-        ctx.lineWidth = 1.2;
-        if (i === 0) ctx.moveTo(pt.x, pt.y);
-        else ctx.lineTo(pt.x, pt.y);
-      }
+      ctx.moveTo(s.x + s.size, sy);
+      ctx.lineTo(s.x - s.size * 0.6, sy - s.size * 0.3);
+      ctx.lineTo(s.x - s.size * 0.4, sy);
+      ctx.lineTo(s.x - s.size * 0.6, sy + s.size * 0.3);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
-
-      // Skiff Hull
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = skiff.color;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.ellipse(skiff.x, sy, skiff.size * 0.6, skiff.size * 0.2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Engine Thruster Glow
-      ctx.fillStyle = skiff.color;
-      ctx.beginPath();
-      ctx.arc(skiff.x - skiff.size * 0.6, sy, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (skiff.x > width + 200) {
-        skiff.x = -150;
-        skiff.yRel = 0.25 + Math.random() * 0.35;
-        skiff.trail = [];
-      }
     }
     ctx.restore();
   }
 
   // =========================================================================
-  // 3. METEORS / SHOOTING STARS (流星雨)
+  // 3. METEORS & SHOOTING STARS (流星群)
   // =========================================================================
   renderMeteors(ctx, width, height, time, windSpeed, isDay) {
-    if (time - this.lastMeteorTime > 3200 && Math.random() < 0.35) {
+    if (isDay) return;
+
+    if (time - this.lastMeteorTime > 2600 && Math.random() < 0.45) {
       this.lastMeteorTime = time;
       this.meteors.push({
-        x: width * (0.2 + Math.random() * 0.7),
-        y: Math.random() * (height * 0.3),
-        vx: -(4.0 + Math.random() * 4.0),
-        vy: 3.5 + Math.random() * 3.5,
-        length: 60 + Math.random() * 80,
+        x: Math.random() * width * 0.8 + width * 0.1,
+        y: Math.random() * height * 0.35,
+        len: 80 + Math.random() * 120,
+        speed: 9 + Math.random() * 8,
+        angle: Math.PI / 4 + (Math.random() - 0.5) * 0.25,
         alpha: 1.0
       });
     }
 
     ctx.save();
+    ctx.globalCompositeOperation = 'screen';
     for (let i = this.meteors.length - 1; i >= 0; i--) {
       const m = this.meteors[i];
-      m.x += m.vx;
-      m.y += m.vy;
-      m.alpha -= 0.025;
+      m.x += Math.cos(m.angle) * m.speed;
+      m.y += Math.sin(m.angle) * m.speed;
+      m.alpha -= 0.024;
 
-      const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 12, m.y - m.vy * 12);
-      grad.addColorStop(0, `rgba(255, 255, 255, ${m.alpha})`);
-      grad.addColorStop(0.3, `rgba(0, 240, 255, ${m.alpha * 0.7})`);
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      if (m.alpha <= 0) {
+        this.meteors.splice(i, 1);
+        continue;
+      }
+
+      const tailX = m.x - Math.cos(m.angle) * m.len;
+      const tailY = m.y - Math.sin(m.angle) * m.len;
+
+      const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      grad.addColorStop(0.3, 'rgba(0, 240, 255, 0.7)');
+      grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
 
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
       ctx.moveTo(m.x, m.y);
-      ctx.lineTo(m.x - m.vx * 12, m.y - m.vy * 12);
+      ctx.lineTo(tailX, tailY);
       ctx.stroke();
 
-      if (m.alpha <= 0 || m.x < -100 || m.y > height + 100) {
-        this.meteors.splice(i, 1);
-      }
+      // Sparkling Head
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#00f0ff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
 
   // =========================================================================
-  // 4. GRAVITY SHOCKWAVE RIPPLES (重力波クリック)
+  // 4. INTERACTIVE GRAVITY SHOCKWAVE RIPPLES (重力波)
   // =========================================================================
   renderGravityRipples(ctx) {
-    ctx.save();
-    for (let i = this.gravityRipples.length - 1; i >= 0; i--) {
-      const rip = this.gravityRipples[i];
-      rip.radius += 3.8;
-      rip.alpha -= 0.022;
+    if (this.gravityRipples.length === 0) return;
 
-      // Double expanding ring
-      ctx.strokeStyle = `rgba(0, 240, 255, ${rip.alpha * 0.8})`;
-      ctx.lineWidth = 2.0;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+
+    for (let i = this.gravityRipples.length - 1; i >= 0; i--) {
+      const r = this.gravityRipples[i];
+      r.radius += 4.5;
+      r.alpha = Math.max(0, 1 - (r.radius / r.maxRadius));
+
+      if (r.radius >= r.maxRadius || r.alpha <= 0.01) {
+        this.gravityRipples.splice(i, 1);
+        continue;
+      }
+
+      // Outer Ring (Cyan)
+      ctx.strokeStyle = `rgba(0, 240, 255, ${r.alpha * 0.75})`;
+      ctx.lineWidth = 2.5;
       ctx.shadowColor = '#00f0ff';
       ctx.shadowBlur = 12;
-
       ctx.beginPath();
-      ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+      ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Inner faint harmonic ring
-      ctx.strokeStyle = `rgba(168, 85, 247, ${rip.alpha * 0.4})`;
-      ctx.lineWidth = 1.0;
-      ctx.beginPath();
-      ctx.arc(rip.x, rip.y, Math.max(0, rip.radius - 20), 0, Math.PI * 2);
-      ctx.stroke();
-
-      if (rip.alpha <= 0 || rip.radius >= rip.maxRadius) {
-        this.gravityRipples.splice(i, 1);
+      // Inner Harmonic Ring (Violet)
+      if (r.radius > 20) {
+        ctx.strokeStyle = `rgba(168, 85, 247, ${r.alpha * 0.55})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius * 0.75, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
+
     ctx.restore();
   }
 }

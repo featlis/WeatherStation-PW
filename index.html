@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>並行世界の気象台 (Aetheria Observatory) - 惑星気象変換ステーション</title>
-  <meta name="description" content="実在する都市の気象データを異星の幻想的な風景（惑星リング・二重太陽・巨大ガス惑星・16大バイオーム）とプロシージャル自然環境音響にリアルタイム変換するWeb観測所。">
-  <link rel="stylesheet" href="css/style.css">
+  <title>並行世界の気象台 (Aetheria Observatory) - 惑星気象観測ステーション</title>
+  <meta name="description" content="実在する地球の気象データを異星の幻想的な風景（惑星リング・二重太陽・巨大ガス惑星・16大バイオーム）と自然環境音響にリアルタイム変換するWeb観測所。">
+  <link rel="stylesheet" href="css/style.css?v=5.0.1">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
 </head>
 <body>
@@ -21,7 +21,7 @@
     <!-- Header Section -->
     <header class="header-bar interactive">
       <div class="brand-section">
-        <div class="brand-logo">
+        <div class="brand-logo" id="brand-logo">
           <svg viewBox="0 0 24 24">
             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
           </svg>
@@ -33,7 +33,7 @@
       </div>
 
       <div class="header-actions">
-        <!-- City Selector Button (Placed First) -->
+        <!-- City Selector Button -->
         <div class="city-select-wrapper">
           <button class="city-select-btn" id="city-select-btn" title="観測地点を変更">
             <span class="status-dot"></span>
@@ -44,15 +44,29 @@
           </button>
         </div>
 
-        <!-- Random Planetary Warp Button (Placed to the RIGHT of City Selector) -->
+        <!-- Random Planetary Warp Button (W Key) -->
         <button class="action-btn warp-btn" id="random-warp-btn" title="世界中からランダムに惑星跳躍 (Wキー)">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
           </svg>
         </button>
 
+        <!-- Galactic Archive / Planet Codex Button -->
+        <button class="action-btn" id="codex-btn" title="銀河観測アーカイブ・惑星図鑑">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zm-2-7h-4V7h-2v4H8v2h4v4h2v-4h4z"/>
+          </svg>
+        </button>
+
+        <!-- Time & Space Simulator Controls Button -->
+        <button class="action-btn" id="simulator-btn" title="時空共鳴シミュレータ (手動気象実験)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 3a9 9 0 0 0-9 9v1a9 9 0 0 0 9 9 9 9 0 0 0 9-9v-1a9 9 0 0 0-9-9zm0 2a7 7 0 0 1 7 7c0 1.3-.36 2.52-.98 3.56L12 11.5V5zm-2 1.3V12l5.44 5.44A7.004 7.004 0 0 1 5 12a7 7 0 0 1 5-5.7z"/>
+          </svg>
+        </button>
+
         <!-- Audio Synthesizer Toggle Button -->
-        <button class="action-btn" id="audio-toggle-btn" title="環境音響BGM (Mキー)">
+        <button class="action-btn" id="audio-toggle-btn" title="自然環境音響BGM (Mキー)">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
           </svg>
@@ -65,8 +79,8 @@
           </svg>
         </button>
 
-        <!-- Ambient Mode Toggle (Focus mode) -->
-        <button class="action-btn" id="ambient-toggle-btn" title="HUD非表示 / 静寂観察モード (Fキー)">
+        <!-- Ambient Mode Toggle (Zenith focus mode) -->
+        <button class="action-btn" id="ambient-toggle-btn" title="HUD非表示 / 静寂観察モード (Fキー / Space)">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
           </svg>
@@ -89,16 +103,24 @@
         <!-- Telemetry Card -->
         <div class="glass-panel telemetry-card interactive">
           <div class="card-header">
-            <span class="card-title">惑星気象テレメトリ</span>
-            <span class="card-tag" id="current-biome-badge">MEGALOPOLIS</span>
+            <span class="card-title no-wrap">惑星気象テレメトリ</span>
+            <span class="card-tag no-wrap" id="current-biome-badge">MEGALOPOLIS</span>
           </div>
 
-          <div class="telemetry-row-hero">
+          <!-- Hero Phenomenon with Mini Holographic Globe -->
+          <div class="telemetry-hero-container">
             <div class="phenomenon-display">
               <span class="phenomenon-name" id="phenomenon-name">蒼光星屑雨</span>
               <span class="phenomenon-sub" id="phenomenon-sub">Bioluminescent Spore Rain</span>
+              <div class="weather-badge-wrap">
+                <span class="weather-badge" id="weather-badge">💧</span>
+                <span class="hazard-badge" id="hazard-badge">SAFE // CL-1</span>
+              </div>
             </div>
-            <div class="weather-badge" id="weather-badge">💧</div>
+            <!-- 3D Mini Wireframe Holographic Planet Globe -->
+            <div class="hologram-globe-wrap" title="惑星ホログラム投影">
+              <canvas id="planet-hologram-canvas" width="76" height="76"></canvas>
+            </div>
           </div>
 
           <!-- Dual Telemetry Grid -->
@@ -139,13 +161,22 @@
               <span class="metric-dual" id="metric-wind-dual">-- ξ/s</span>
             </div>
           </div>
+
+          <!-- Real-time Atmospheric Oscilloscope Waveform -->
+          <div class="oscilloscope-container">
+            <div class="oscilloscope-header">
+              <span>ATMOSPHERIC FLUX WAVE</span>
+              <span id="flux-hz">432.8 THz</span>
+            </div>
+            <canvas id="telemetry-wave-canvas" width="280" height="38"></canvas>
+          </div>
         </div>
 
         <!-- Observatory Log Stream -->
         <div class="glass-panel logs-card interactive">
           <div class="card-header">
-            <span class="card-title">惑星観測日誌 (LOGS)</span>
-            <span class="card-tag" style="color: var(--accent-emerald); border-color: rgba(0, 255, 178, 0.3);">REC</span>
+            <span class="card-title no-wrap">惑星観測日誌 (LOGS)</span>
+            <span class="card-tag no-wrap live-rec-tag">REC</span>
           </div>
           <div class="log-stream-content" id="log-stream">
             <!-- Dynamically populated -->
@@ -162,20 +193,25 @@
 
       <!-- Right Column: Generative Audio & Planetary Physical Specs -->
       <section class="hud-column">
-        <!-- Audio Synthesizer Control Card with Mixer Button -->
+        <!-- Audio Synthesizer Control Card with Spectrum Visualizer -->
         <div class="glass-panel control-card interactive">
           <div class="card-header">
-            <span class="card-title">自然環境音響 (AUDIO)</span>
+            <span class="card-title no-wrap">自然環境音響 (AUDIO)</span>
             <button class="mini-tool-btn" id="open-mixer-btn" title="各音響レイヤーの音量ミキサー">
               🎛️ 音響ミキサー
             </button>
+          </div>
+
+          <!-- Real-Time Audio Frequency Spectrum Bars -->
+          <div class="spectrum-visualizer-wrap">
+            <canvas id="audio-spectrum-canvas" width="280" height="36"></canvas>
           </div>
 
           <div class="audio-controls">
             <div class="slider-group">
               <div class="slider-header">
                 <span>MASTER GAIN</span>
-                <span>VOLUME</span>
+                <span id="volume-pct">55%</span>
               </div>
               <input type="range" class="custom-range" id="audio-volume-slider" min="0" max="1" step="0.01" value="0.55">
             </div>
@@ -185,7 +221,7 @@
         <!-- Celestial Pomodoro Focus Timer -->
         <div class="glass-panel timer-card interactive">
           <div class="card-header">
-            <span class="card-title">異界の瞑想・集中タイマー</span>
+            <span class="card-title no-wrap">異界の瞑想・集中タイマー</span>
             <button class="timer-mode-chip" id="timer-mode-btn">FOCUS (25m)</button>
           </div>
 
@@ -202,8 +238,8 @@
         <!-- Planetary Environmental Physics Status -->
         <div class="glass-panel station-status-card interactive">
           <div class="card-header">
-            <span class="card-title">惑星物理パラメータ</span>
-            <span class="card-tag" id="sync-status-text" style="color: var(--accent-emerald); border-color: rgba(0, 255, 178, 0.3);">LIVE SYNC</span>
+            <span class="card-title no-wrap">惑星物理パラメータ</span>
+            <span class="card-tag no-wrap" id="sync-status-text" style="color: var(--accent-emerald); border-color: rgba(0, 255, 178, 0.3);">LIVE SYNC</span>
           </div>
 
           <div class="status-items-list">
@@ -231,10 +267,14 @@
     <!-- Footer Bar -->
     <footer class="footer-bar interactive">
       <div class="ambient-tip">
-        <span class="key-badge">W</span> 惑星ワープ &nbsp;|&nbsp; <span class="key-badge">クリック</span> 重力波 &nbsp;|&nbsp; <span class="key-badge">P</span> 絵葉書 &nbsp;|&nbsp; <span class="key-badge">F</span> 全画面 &nbsp;|&nbsp; <span class="key-badge">M</span> 音声
+        <span class="key-badge">W</span> 惑星ワープ &nbsp;|&nbsp; 
+        <span class="key-badge">クリック</span> 重力波 &nbsp;|&nbsp; 
+        <span class="key-badge">P</span> 絵葉書 &nbsp;|&nbsp; 
+        <span class="key-badge">F</span> 全画面 &nbsp;|&nbsp; 
+        <span class="key-badge">M</span> 音声
       </div>
       <div class="ambient-tip">
-        <span>AETHERIA OBSERVATORY // PLANET EXOPACK v4.5.0</span>
+        <span>AETHERIA OBSERVATORY // PLANET EXOPACK v5.0</span>
       </div>
     </footer>
   </div>
@@ -249,7 +289,7 @@
     <div class="glass-panel city-modal">
       <div class="card-header">
         <span class="card-title">観測惑星・都市の選択</span>
-        <span class="card-tag">GLOBAL STATIONS</span>
+        <button class="action-btn modal-close-btn" id="close-city-btn">✕</button>
       </div>
 
       <div class="search-input-wrapper">
@@ -267,15 +307,106 @@
     </div>
   </div>
 
+  <!-- Galactic Archive / Planet Codex Modal -->
+  <div class="modal-overlay" id="codex-modal-overlay">
+    <div class="glass-panel codex-modal">
+      <div class="card-header">
+        <span class="card-title">🌌 銀河観測アーカイブ (PLANET CODEX)</span>
+        <button class="action-btn modal-close-btn" id="close-codex-btn">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 14px;">
+        観測台で発見・跳躍した異星の航路記録。いつでも再跳躍できます。
+      </p>
+      <div class="codex-grid" id="codex-entries-list">
+        <!-- Dynamically filled from localStorage -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Time & Space Simulator Controls Modal / Drawer -->
+  <div class="modal-overlay" id="sim-modal-overlay">
+    <div class="glass-panel sim-modal">
+      <div class="card-header">
+        <span class="card-title">⚡ 時空共鳴シミュレータ (SIMULATOR)</span>
+        <button class="action-btn modal-close-btn" id="close-sim-btn">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 14px;">
+        現実の天候パラメータを手動でオーバーライドし、異世界の風景変化をリアルタイム実験できます。
+      </p>
+
+      <div class="sim-controls-grid">
+        <div class="sim-control-item">
+          <div class="slider-header">
+            <span>天候現象強制 (WEATHER OVERRIDE)</span>
+          </div>
+          <select class="sim-select" id="sim-weather-select">
+            <option value="AUTO">自動 (LIVE DATA SYNC)</option>
+            <option value="CLEAR">星環光芒 (CLEAR)</option>
+            <option value="RAIN">蒼光星屑雨 (RAIN)</option>
+            <option value="SNOW">反重力結晶 (SNOW)</option>
+            <option value="THUNDER">量子共鳴放電 (THUNDER)</option>
+            <option value="FOG">深幽霊霧 (FOG)</option>
+            <option value="CLOUDS">霊脈星雲 (CLOUDS)</option>
+          </select>
+        </div>
+
+        <div class="sim-control-item">
+          <div class="slider-header">
+            <span>惑星バイオーム強制 (BIOME SELECT)</span>
+          </div>
+          <select class="sim-select" id="sim-biome-select">
+            <option value="AUTO">自動 (ZONE CALC)</option>
+            <option value="MEGALOPOLIS">星間摩天楼 (Megalopolis)</option>
+            <option value="PLAINS">霊光草原・巨大霊樹 (Plains)</option>
+            <option value="COAST">結晶海岸・波光 (Coast)</option>
+            <option value="ARCHIPELAGO">浮遊列島・天球神殿 (Archipelago)</option>
+            <option value="GLACIER">極氷晶界・氷尖塔 (Glacier)</option>
+            <option value="VOLCANO_PLASMA">星核溶岩・カルデラ (Plasma Caldera)</option>
+            <option value="CRYSTAL_FOREST">巨晶の森・クォーツ (Crystal Forest)</option>
+            <option value="DESERT_RUINS">星屑砂漠・古代環状遺跡 (Desert Ruins)</option>
+            <option value="DEEP_ABYSS_REEF">深淵発光サンゴ礁 (Abyss Reef)</option>
+            <option value="SOLAR_SPIRE">太陽受光塔 (Solar Spire)</option>
+            <option value="NEBULA_CANYON">星雲峡谷 (Nebula Canyon)</option>
+            <option value="MUSHROOM_GROVE">発光茸の森 (Mushroom Grove)</option>
+            <option value="ETHEREAL_SWAMP">幽霊沼沢・水鏡 (Ethereal Swamp)</option>
+            <option value="FLOATING_CITADEL">天空要塞・幾何学モノリス (Citadel)</option>
+            <option value="LAVA_OCEAN">溶融プラズマ海 (Lava Ocean)</option>
+            <option value="AURORA_TUNDRA">極光ツンドラ (Aurora Tundra)</option>
+          </select>
+        </div>
+
+        <div class="sim-control-item">
+          <div class="slider-header">
+            <span>エーテル風速 (WIND SPEED)</span>
+            <span id="sim-wind-val">10 km/h</span>
+          </div>
+          <input type="range" class="custom-range" id="sim-wind-slider" min="0" max="60" step="1" value="15">
+        </div>
+
+        <div class="sim-control-item">
+          <div class="slider-header">
+            <span>次元色温度 (TEMPERATURE)</span>
+            <span id="sim-temp-val">20 °C</span>
+          </div>
+          <input type="range" class="custom-range" id="sim-temp-slider" min="-30" max="45" step="1" value="20">
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Extended Soundscape Mixer Modal -->
   <div class="modal-overlay" id="mixer-modal-overlay">
     <div class="glass-panel mixer-modal">
       <div class="card-header">
         <span class="card-title">自然環境音響レイヤーミキサー</span>
-        <button class="action-btn" id="close-mixer-btn" style="width: 28px; height: 28px;">✕</button>
+        <button class="action-btn modal-close-btn" id="close-mixer-btn">✕</button>
       </div>
 
       <div class="mixer-sliders-list">
+        <div class="mixer-item">
+          <div class="mixer-label"><span>✨ 恒星瞑想シンセパッド (Celestial Ambient Pad)</span></div>
+          <input type="range" class="custom-range" id="mix-pad-slider" min="0" max="1.5" step="0.05" value="1.0">
+        </div>
         <div class="mixer-item">
           <div class="mixer-label"><span>💧 雨粒・降雨音 (Rain & Droplets)</span></div>
           <input type="range" class="custom-range" id="mix-rain-slider" min="0" max="1.5" step="0.05" value="1.0">
@@ -317,6 +448,6 @@
   </div>
 
   <!-- Modular Scripts -->
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=5.0.1"></script>
 </body>
 </html>
